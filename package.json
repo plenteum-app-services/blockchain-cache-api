@@ -1,0 +1,32 @@
+{
+  "name": "blockchain-cache-api",
+  "version": "0.0.1",
+  "description": "TurtlePay: Blockchain Cache API",
+  "main": "index.js",
+  "scripts": {
+    "test": "standard"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TurtlePay/blockchain-cache-api.git"
+  },
+  "keywords": [
+    "TurtlePay"
+  ],
+  "author": "TurtlePay Development Team",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/TurtlePay/blockchain-cache-api/issues"
+  },
+  "homepage": "https://github.com/TurtlePay/blockchain-cache-api#readme",
+  "devDependencies": {
+    "standard": "^12.0.1"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "compression": "^1.7.3",
+    "express": "^4.16.4",
+    "helmet": "^3.15.0",
+    "mysql": "^2.16.0"
+  }
+}
