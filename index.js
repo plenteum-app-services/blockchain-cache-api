@@ -17,17 +17,4 @@ const database = new DatabaseBackend({
   connectionLimit: Config.mysql.connectionLimit
 })
 
-/*
-database.getLastBlockHeader().then((block) => {
-  console.log(block)
-})
-
-database.getTransactionPool().then((pool) => {
-  console.log(pool)
-})
-*/
-
-database.getTransaction('0079abddd7771e6a28c1b39d856552ac690d391ba39acfe5e8a39cbe8d42be74').then((result) => {
-  console.log(result)
-})
-// 0079abddd7771e6a28c1b39d856552ac690d391ba39acfe5e8a39cbe8d42be74
+console.log('Connected to ' + database.host + ':' + database.port)
