@@ -1,7 +1,7 @@
-# TurtlePay™ Blockchain Data Collection Agent (BDCA)
+# TurtlePay™ Blockchain Cache API
 
 #### Master Build Status
-[![Build Status](https://travis-ci.org/TurtlePay/blockchain-data-collection-agent.svg?branch=master)](https://travis-ci.org/TurtlePay/blockchain-data-collection-agent) [![Build status](https://ci.appveyor.com/api/projects/status/github/TurtlePay/blockchain-data-collection-agent?branch=master&svg=true)](https://ci.appveyor.com/project/brandonlehmann/blockchain-data-collection-agent/branch/master)
+[![Build Status](https://travis-ci.org/TurtlePay/blockchain-cache-api.svg?branch=master)](https://travis-ci.org/TurtlePay/blockchain-cache-api) [![Build status](https://ci.appveyor.com/api/projects/status/github/TurtlePay/blockchain-cache-api?branch=master&svg=true)](https://ci.appveyor.com/project/brandonlehmann/blockchain-cache-api/branch/master)
 
 Documentation coming soon...
 
