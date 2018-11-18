@@ -6,5 +6,8 @@
     "password": "password",
     "database": "turtlecoin",
     "connectionLimit": 10
-  }
+  },
+  "bindIp": "0.0.0.0",
+  "httpPort": 80,
+  "corsHeader": "*"
 }
