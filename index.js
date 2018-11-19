@@ -11,6 +11,7 @@ const Compression = require('compression')
 const Helmet = require('helmet')
 const BodyParser = require('body-parser')
 const Express = require('express')
+const isHex = require('is-hex')
 
 /* Let's set up a standard logger. Sure it looks cheap but it's
    reliable and won't crash */
@@ -24,6 +25,7 @@ function logHTTPRequest (req, params) {
 }
 
 function logHTTPError (req, message) {
+  message = message || 'Parsing error'
   log(util.format('[ERROR] (%s) %s: %s', req.ip, req.path, message))
 }
 
@@ -76,11 +78,12 @@ app.get('/height', (req, res) => {
 /* Get block information for the last 30 blocks before
    the specified block inclusive of the specified block */
 app.get('/block/headers/:search', (req, res) => {
-  const idx = req.params.search || -1
+  const idx = parseInt(req.params.search) || -1
 
   /* If the caller did not specify a valid height then
      they most certainly didn't read the directions */
   if (idx === -1) {
+    logHTTPError(req)
     return res.status(400).send()
   }
 
@@ -107,7 +110,15 @@ app.get('/block/header/top', (req, res) => {
 /* Get the block header for the specified block (by hash or height) */
 app.get('/block/header/:search', (req, res) => {
   const idx = req.params.search
+
+  /* If we suspect that we were passed a hash, let's go look for it */
   if (idx.length === 64) {
+    /* But first, did they pass us only hexadecimal characters ? */
+    if (!isHex(idx)) {
+      logHTTPError(req)
+      return res.status(400).send()
+    }
+
     database.getBlockHeaderByHash(idx).then((header) => {
       logHTTPRequest(req)
       return res.json(header)
@@ -116,6 +127,12 @@ app.get('/block/header/:search', (req, res) => {
       return res.status(404).send()
     })
   } else {
+    /* If they didn't pass us a number, we need to get out of here */
+    if (isNaN(parseInt(idx))) {
+      logHTTPError(req)
+      return res.status(400).send()
+    }
+
     database.getBlockHeaderByHeight(idx).then((header) => {
       logHTTPRequest(req)
       return res.json(header)
@@ -141,7 +158,15 @@ app.get('/block/count', (req, res) => {
 /* Get block information for the specified block (by hash or height) */
 app.get('/block/:search', (req, res) => {
   const idx = req.params.search
+
+  /* If we suspect that we were passed a hash, let's go look for it */
   if (idx.length === 64) {
+    /* But first, did they pass us only hexadecimal characters ? */
+    if (!isHex(idx)) {
+      logHTTPError(req)
+      return res.status(400).send()
+    }
+
     database.getBlock(idx).then((block) => {
       logHTTPRequest(req)
       return res.json(block)
@@ -150,6 +175,12 @@ app.get('/block/:search', (req, res) => {
       return res.status(404).send()
     })
   } else {
+    /* If they didn't pass us a number, we need to get out of here */
+    if (isNaN(parseInt(idx))) {
+      logHTTPError(req)
+      return res.status(400).send()
+    }
+
     database.getBlockHeaderByHeight(idx).then((header) => {
       return database.getBlock(header.hash)
     }).then((block) => {
@@ -176,6 +207,13 @@ app.get('/transaction/pool', (req, res) => {
 /* Get a transaction by its hash */
 app.get('/transaction/:search', (req, res) => {
   const idx = req.params.search
+
+  /* We need to check to make sure that they sent us 64 hexadecimal characters */
+  if (!isHex(idx) || idx.length !== 64) {
+    logHTTPError(req)
+    return res.status(400).send()
+  }
+
   database.getTransaction(idx).then((transaction) => {
     logHTTPRequest(req)
     return res.json(transaction)
@@ -188,6 +226,13 @@ app.get('/transaction/:search', (req, res) => {
 /* Get transaction inputs by its hash */
 app.get('/transaction/:search/inputs', (req, res) => {
   const idx = req.params.search
+
+  /* We need to check to make sure that they sent us 64 hexadecimal characters */
+  if (!isHex(idx) || idx.length !== 64) {
+    logHTTPError(req)
+    return res.status(400).send()
+  }
+
   database.getTransactionInputs(idx).then((inputs) => {
     if (inputs.length === 0) {
       logHTTPRequest(req)
@@ -204,6 +249,13 @@ app.get('/transaction/:search/inputs', (req, res) => {
 /* Get transaction outputs by its hash */
 app.get('/transaction/:search/outputs', (req, res) => {
   const idx = req.params.search
+
+  /* We need to check to make sure that they sent us 64 hexadecimal characters */
+  if (!isHex(idx) || idx.length !== 64) {
+    logHTTPError(req)
+    return res.status(400).send()
+  }
+
   database.getTransactionOutputs(idx).then((outputs) => {
     if (outputs.length === 0) {
       logHTTPRequest(req)
@@ -220,6 +272,13 @@ app.get('/transaction/:search/outputs', (req, res) => {
 /* Get all transactions hashes that have the supplied payment ID */
 app.get('/transactions/:search', (req, res) => {
   const idx = req.params.search
+
+  /* We need to check to make sure that they sent us 64 hexadecimal characters */
+  if (!isHex(idx) || idx.length !== 64) {
+    logHTTPError(req)
+    return res.status(400).send()
+  }
+
   database.getTransactionHashesByPaymentId(idx).then((hashes) => {
     logHTTPRequest(req)
     return res.json(hashes)
@@ -233,16 +292,33 @@ app.get('/transactions/:search', (req, res) => {
    the transactions that belong to the wallet */
 app.post('/sync', (req, res) => {
   const lastKnownBlockHashes = req.body.lastKnownBlockHashes || []
-  const blockCount = req.body.blockCount || 100
+  const blockCount = parseInt(req.body.blockCount) || 100
 
-  /* If you didn't supply an array of known block hashes then
-     you didn't read the directions. We all know how that always
-     ends up so let's shoot the caller a reminder */
-  if (!Array.isArray(lastKnownBlockHashes) || lastKnownBlockHashes.length === 0) {
+  /* If it's not an array then we didn't follow the directions */
+  if (!Array.isArray(lastKnownBlockHashes)) {
+    logHTTPRequest(req, JSON.stringify(req.body))
     return res.status(400).send()
   }
 
-  database.getWalletSyncData(lastKnownBlockHashes, blockCount).then((outputs) => {
+  var searchHashes = []
+  /* We need to loop through these and validate that we were
+     given valid data to search through and not data that does
+     not make any sense */
+  lastKnownBlockHashes.forEach((elem) => {
+    /* We need to check to make sure that they sent us 64 hexadecimal characters */
+    if (elem.length === 64 && isHex(elem)) {
+      searchHashes.push(elem)
+    }
+  })
+
+  /* If, after sanitizing our input, we don't have any hashes
+     to search for, then we're going to stop right here and
+     say something about it */
+  if (searchHashes.length === 0) {
+    return res.status(400).send()
+  }
+
+  database.getWalletSyncData(searchHashes, blockCount).then((outputs) => {
     logHTTPRequest(req, JSON.stringify(req.body))
     return res.json(outputs)
   }).catch((error) => {
