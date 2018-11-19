@@ -85,6 +85,7 @@ app.get('/block/headers/:search', (req, res) => {
   }
 
   database.getBlocks(idx).then((blocks) => {
+    logHTTPRequest(req)
     return res.json(blocks)
   }).catch((error) => {
     logHTTPError(req, error)
