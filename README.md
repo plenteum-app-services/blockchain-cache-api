@@ -5,6 +5,7 @@
 
 ## Prerequisites
 
+* MariaDB/MySQL with InnoDB support
 * [TurtlePay: Blockchain Data Collection Agent](https://github.com/TurtlePay/blockchain-data-collection-agent)
 * [Node.js](https://nodejs.org/) LTS
 
