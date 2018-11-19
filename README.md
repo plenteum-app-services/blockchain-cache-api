@@ -26,7 +26,7 @@ git clone https://github.com/TurtlePay/blockchain-cache-api
 cd blockchain-cache-api && npm install
 ```
 
-3) Use your favorite text editor to change the values as necessary in `config.js`
+3) Use your favorite text editor to change the values as necessary in `config.json`
 
 **Note:** Make sure you use a read-only database user for security reasons
 
