@@ -29,6 +29,17 @@ function logHTTPError (req, message) {
   log(util.format('[ERROR] (%s) %s: %s', req.ip, req.path, message))
 }
 
+/* This is a special magic function to make sure that when
+   we parse a number that the whole thing is actually a
+   number */
+function toNumber (term) {
+  if (parseInt(term).toString() === term) {
+    return parseInt(term)
+  } else {
+    return false
+  }
+}
+
 /* Set up our database connection */
 const database = new DatabaseBackend({
   host: Config.mysql.host,
@@ -78,7 +89,7 @@ app.get('/height', (req, res) => {
 /* Get block information for the last 30 blocks before
    the specified block inclusive of the specified block */
 app.get('/block/headers/:search', (req, res) => {
-  const idx = parseInt(req.params.search) || -1
+  const idx = toNumber(req.params.search) || -1
 
   /* If the caller did not specify a valid height then
      they most certainly didn't read the directions */
@@ -128,7 +139,7 @@ app.get('/block/header/:search', (req, res) => {
     })
   } else {
     /* If they didn't pass us a number, we need to get out of here */
-    if (isNaN(parseInt(idx))) {
+    if (!toNumber(idx)) {
       logHTTPError(req)
       return res.status(400).send()
     }
@@ -176,7 +187,7 @@ app.get('/block/:search', (req, res) => {
     })
   } else {
     /* If they didn't pass us a number, we need to get out of here */
-    if (isNaN(parseInt(idx))) {
+    if (!toNumber(idx)) {
       logHTTPError(req)
       return res.status(400).send()
     }
@@ -292,7 +303,7 @@ app.get('/transactions/:search', (req, res) => {
    the transactions that belong to the wallet */
 app.post('/sync', (req, res) => {
   const lastKnownBlockHashes = req.body.lastKnownBlockHashes || []
-  const blockCount = parseInt(req.body.blockCount) || 100
+  const blockCount = toNumber(req.body.blockCount) || 100
 
   /* If it's not an array then we didn't follow the directions */
   if (!Array.isArray(lastKnownBlockHashes)) {
