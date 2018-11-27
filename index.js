@@ -86,6 +86,27 @@ app.get('/height', (req, res) => {
   })
 })
 
+/* Get block information for the last 1,000 blocks before
+   the specified block inclusive of the specified blocks */
+app.get('/block/headers/:search/bulk', (req, res) => {
+  const idx = toNumber(req.params.search) || -1
+
+  /* If the caller did not specify a valid height then
+     they most certainly didn't read the directions */
+  if (idx === -1) {
+    logHTTPError(req)
+    return res.status(400).send()
+  }
+
+  database.getBlocks(idx, 1000).then((blocks) => {
+    logHTTPRequest(req)
+    return res.json(blocks)
+  }).catch((error) => {
+    logHTTPError(req, error)
+    return res.status(500).send()
+  })
+})
+
 /* Get block information for the last 30 blocks before
    the specified block inclusive of the specified block */
 app.get('/block/headers/:search', (req, res) => {
