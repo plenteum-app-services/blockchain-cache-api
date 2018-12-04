@@ -33,6 +33,9 @@ function logHTTPError (req, message) {
    we parse a number that the whole thing is actually a
    number */
 function toNumber (term) {
+  if (typeof term === 'number') {
+    return term
+  }
   if (parseInt(term).toString() === term) {
     return parseInt(term)
   } else {
