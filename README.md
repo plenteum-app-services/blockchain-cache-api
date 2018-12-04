@@ -31,6 +31,7 @@ cd blockchain-cache-api && npm install
 
 **Note:** Make sure you use a read-only database user for security reasons
 
+  
 ```javascript
 {
   "mysql": {
@@ -95,6 +96,8 @@ This package provides the following HTTP RESTful API methods:
 
 #### /block/#
 
+<details><summary>click to view</summary>
+  
 ```javascript
 {
   "hash": "dd40ba6a33e7c6ff84927d510881e285eba9a17cbde43da587aa6cc41883b852",
@@ -126,8 +129,12 @@ This package provides the following HTTP RESTful API methods:
 }
 ```
 
+</details>
+
 #### /block/header/#
 
+<details><summary>click to view</summary>
+  
 ```javascript
 {
 "hash": "dd40ba6a33e7c6ff84927d510881e285eba9a17cbde43da587aa6cc41883b852",
@@ -151,8 +158,12 @@ This package provides the following HTTP RESTful API methods:
 }
 ```
 
+</details>
+
 #### /block/header/top
 
+<details><summary>click to view</summary>
+  
 ```javascript
 {
   "hash": "43dbe714ebc601796e1befd019c92562ea3eaab1763c8222fd056007affd1242",
@@ -176,8 +187,12 @@ This package provides the following HTTP RESTful API methods:
 }
 ```
 
+</details>
+
 #### /block/headers/#height#
 
+<details><summary>click to view</summary>
+  
 ```javascript
 [
   {
@@ -423,8 +438,12 @@ This package provides the following HTTP RESTful API methods:
 ]
 ```
 
+</details>
+
 #### /transaction/pool
 
+<details><summary>click to view</summary>
+  
 ```javascript
 [
   {
@@ -454,8 +473,12 @@ This package provides the following HTTP RESTful API methods:
 ]
 ```
 
+</details>
+
 #### /transaction/#
 
+<details><summary>click to view</summary>
+  
 ```javascript
 {
   "tx": {
@@ -538,8 +561,12 @@ This package provides the following HTTP RESTful API methods:
 }
 ```
 
+</details>
+
 #### /transaction/#/inputs
 
+<details><summary>click to view</summary>
+  
 ```javascript
 [
   {
@@ -560,8 +587,12 @@ This package provides the following HTTP RESTful API methods:
 ]
 ```
 
+</details>
+
 #### /transaction/#/outputs
 
+<details><summary>click to view</summary>
+  
 ```javascript
 [
   {
@@ -1197,8 +1228,12 @@ This package provides the following HTTP RESTful API methods:
 ]
 ```
 
+</details>
+
 #### /transactions/#
 
+<details><summary>click to view</summary>
+  
 ```javascript
 [
   {
@@ -1219,6 +1254,8 @@ This package provides the following HTTP RESTful API methods:
   }
 ]
 ```
+
+</details>
 
 #### /sync
 
@@ -1257,6 +1294,8 @@ The base payload has the following structure:
 
 This response has been condensed considerably for the documentation.
 
+<details><summary>click to view</summary>
+  
 ```javascript
 [
   {
@@ -3936,5 +3975,8 @@ This response has been condensed considerably for the documentation.
   }
 ]
 ```
+
+</details>
+
 
 ###### (c) 2018 TurtlePay™ Development Team
