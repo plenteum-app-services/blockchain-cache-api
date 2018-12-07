@@ -71,6 +71,7 @@ This package provides the following HTTP RESTful API methods:
 
 |Path|Description|Response|
 |---|---|---|
+|/amounts|Returns an array of amounts that are currently considered *spendable* on the network|See [Example Response](#amounts)|
 |/height|Returns the cache current height|```{"height": 857860}```|
 |/block/count|Returns the total number of blocks in the cache|```{"blockCount":857860}```|
 |/block/*#hash#*|Returns the block information for the block with the specified hash|See [Example Response](#block)|
@@ -93,6 +94,465 @@ This package provides the following HTTP RESTful API methods:
 |/sync|Returns all the necessary information for a wallet to discover which outputs belong to it|```{"lastKnownBlockHashes":[...],"blockCount":100}``` See [Note](#post-payload)|See [Example Response](#response)|
 
 ### Example Responses
+
+#### /amounts/#
+
+<details><summary>click to view</summary>
+
+```javascript
+[
+  {
+    "amount": 1,
+    "timestamp": 1512805428,
+    "height": 6
+  },
+  {
+    "amount": 2,
+    "timestamp": 1512808168,
+    "height": 106
+  },
+  {
+    "amount": 3,
+    "timestamp": 1512807605,
+    "height": 96
+  },
+  {
+    "amount": 4,
+    "timestamp": 1512807422,
+    "height": 85
+  },
+  {
+    "amount": 5,
+    "timestamp": 1512807047,
+    "height": 74
+  },
+  {
+    "amount": 6,
+    "timestamp": 1512806571,
+    "height": 62
+  },
+  {
+    "amount": 7,
+    "timestamp": 1512806319,
+    "height": 51
+  },
+  {
+    "amount": 8,
+    "timestamp": 1512805974,
+    "height": 40
+  },
+  {
+    "amount": 9,
+    "timestamp": 1512805711,
+    "height": 29
+  },
+  {
+    "amount": 10,
+    "timestamp": 1512809094,
+    "height": 141
+  },
+  {
+    "amount": 20,
+    "timestamp": 1512805711,
+    "height": 29
+  },
+  {
+    "amount": 30,
+    "timestamp": 1512800694,
+    "height": 4
+  },
+  {
+    "amount": 40,
+    "timestamp": 1512831019,
+    "height": 929
+  },
+  {
+    "amount": 50,
+    "timestamp": 1512828611,
+    "height": 816
+  },
+  {
+    "amount": 60,
+    "timestamp": 1512825646,
+    "height": 703
+  },
+  {
+    "amount": 70,
+    "timestamp": 1512822822,
+    "height": 592
+  },
+  {
+    "amount": 80,
+    "timestamp": 1512819402,
+    "height": 479
+  },
+  {
+    "amount": 90,
+    "timestamp": 1512815944,
+    "height": 366
+  },
+  {
+    "amount": 100,
+    "timestamp": 1512815944,
+    "height": 366
+  },
+  {
+    "amount": 200,
+    "timestamp": 1512800694,
+    "height": 4
+  },
+  {
+    "amount": 300,
+    "timestamp": 1512946318,
+    "height": 4846
+  },
+  {
+    "amount": 400,
+    "timestamp": 1512947923,
+    "height": 4891
+  },
+  {
+    "amount": 500,
+    "timestamp": 1513011222,
+    "height": 7121
+  },
+  {
+    "amount": 600,
+    "timestamp": 1512979615,
+    "height": 5994
+  },
+  {
+    "amount": 700,
+    "timestamp": 1512889901,
+    "height": 2839
+  },
+  {
+    "amount": 800,
+    "timestamp": 1512915002,
+    "height": 3744
+  },
+  {
+    "amount": 900,
+    "timestamp": 1512836803,
+    "height": 1112
+  },
+  {
+    "amount": 1000,
+    "timestamp": 1512951201,
+    "height": 5005
+  },
+  {
+    "amount": 2000,
+    "timestamp": 1513087682,
+    "height": 9684
+  },
+  {
+    "amount": 3000,
+    "timestamp": 1513084122,
+    "height": 9569
+  },
+  {
+    "amount": 4000,
+    "timestamp": 1513084660,
+    "height": 9590
+  },
+  {
+    "amount": 5000,
+    "timestamp": 1513085423,
+    "height": 9614
+  },
+  {
+    "amount": 6000,
+    "timestamp": 1512948435,
+    "height": 4907
+  },
+  {
+    "amount": 7000,
+    "timestamp": 1513080193,
+    "height": 9439
+  },
+  {
+    "amount": 8000,
+    "timestamp": 1512946262,
+    "height": 4844
+  },
+  {
+    "amount": 9000,
+    "timestamp": 1512836814,
+    "height": 1111
+  },
+  {
+    "amount": 10000,
+    "timestamp": 1512946349,
+    "height": 4847
+  },
+  {
+    "amount": 20000,
+    "timestamp": 1512946352,
+    "height": 4848
+  },
+  {
+    "amount": 30000,
+    "timestamp": 1512951201,
+    "height": 5005
+  },
+  {
+    "amount": 40000,
+    "timestamp": 1512920866,
+    "height": 3932
+  },
+  {
+    "amount": 50000,
+    "timestamp": 1513075708,
+    "height": 9305
+  },
+  {
+    "amount": 60000,
+    "timestamp": 1513087682,
+    "height": 9684
+  },
+  {
+    "amount": 70000,
+    "timestamp": 1512882892,
+    "height": 2617
+  },
+  {
+    "amount": 80000,
+    "timestamp": 1512800694,
+    "height": 4
+  },
+  {
+    "amount": 90000,
+    "timestamp": 1512836814,
+    "height": 1111
+  },
+  {
+    "amount": 100000,
+    "timestamp": 1512836814,
+    "height": 1111
+  },
+  {
+    "amount": 200000,
+    "timestamp": 1512946318,
+    "height": 4846
+  },
+  {
+    "amount": 300000,
+    "timestamp": 1512946352,
+    "height": 4848
+  },
+  {
+    "amount": 400000,
+    "timestamp": 1512948452,
+    "height": 4909
+  },
+  {
+    "amount": 500000,
+    "timestamp": 1512862491,
+    "height": 1951
+  },
+  {
+    "amount": 600000,
+    "timestamp": 1513080848,
+    "height": 9464
+  },
+  {
+    "amount": 700000,
+    "timestamp": 1512849079,
+    "height": 1511
+  },
+  {
+    "amount": 800000,
+    "timestamp": 1512849311,
+    "height": 1521
+  },
+  {
+    "amount": 900000,
+    "timestamp": 1512800694,
+    "height": 4
+  },
+  {
+    "amount": 1000000,
+    "timestamp": 1512834170,
+    "height": 1028
+  },
+  {
+    "amount": 2000000,
+    "timestamp": 1512800694,
+    "height": 4
+  },
+  {
+    "amount": 3000000,
+    "timestamp": 1513091347,
+    "height": 9799
+  },
+  {
+    "amount": 4000000,
+    "timestamp": 1513086474,
+    "height": 9642
+  },
+  {
+    "amount": 5000000,
+    "timestamp": 1512948452,
+    "height": 4909
+  },
+  {
+    "amount": 6000000,
+    "timestamp": 1513087065,
+    "height": 9663
+  },
+  {
+    "amount": 7000000,
+    "timestamp": 1513095489,
+    "height": 9930
+  },
+  {
+    "amount": 8000000,
+    "timestamp": 1512948537,
+    "height": 4913
+  },
+  {
+    "amount": 9000000,
+    "timestamp": 1512946349,
+    "height": 4847
+  },
+  {
+    "amount": 10000000,
+    "timestamp": 1512862069,
+    "height": 1938
+  },
+  {
+    "amount": 20000000,
+    "timestamp": 1513081052,
+    "height": 9470
+  },
+  {
+    "amount": 30000000,
+    "timestamp": 1513138713,
+    "height": 11323
+  },
+  {
+    "amount": 40000000,
+    "timestamp": 1514969821,
+    "height": 70197
+  },
+  {
+    "amount": 50000000,
+    "timestamp": 1512948402,
+    "height": 4906
+  },
+  {
+    "amount": 60000000,
+    "timestamp": 1514969463,
+    "height": 70184
+  },
+  {
+    "amount": 70000000,
+    "timestamp": 1514958201,
+    "height": 69816
+  },
+  {
+    "amount": 80000000,
+    "timestamp": 1514956154,
+    "height": 69752
+  },
+  {
+    "amount": 90000000,
+    "timestamp": 1514954461,
+    "height": 69698
+  },
+  {
+    "amount": 100000000,
+    "timestamp": 1512946349,
+    "height": 4847
+  },
+  {
+    "amount": 200000000,
+    "timestamp": 1513722752,
+    "height": 30090
+  },
+  {
+    "amount": 300000000,
+    "timestamp": 1516047551,
+    "height": 104789
+  },
+  {
+    "amount": 400000000,
+    "timestamp": 1516048962,
+    "height": 104831
+  },
+  {
+    "amount": 500000000,
+    "timestamp": 1515639901,
+    "height": 91767
+  },
+  {
+    "amount": 600000000,
+    "timestamp": 1516957367,
+    "height": 133681
+  },
+  {
+    "amount": 700000000,
+    "timestamp": 1517028876,
+    "height": 135977
+  },
+  {
+    "amount": 800000000,
+    "timestamp": 1517889874,
+    "height": 164023
+  },
+  {
+    "amount": 900000000,
+    "timestamp": 1517442380,
+    "height": 149238
+  },
+  {
+    "amount": 1000000000,
+    "timestamp": 1516672347,
+    "height": 124739
+  },
+  {
+    "amount": 2000000000,
+    "timestamp": 1520737931,
+    "height": 254927
+  },
+  {
+    "amount": 3000000000,
+    "timestamp": 1522603426,
+    "height": 313947
+  },
+  {
+    "amount": 4000000000,
+    "timestamp": 1527056784,
+    "height": 475192
+  },
+  {
+    "amount": 5000000000,
+    "timestamp": 1524753860,
+    "height": 401462
+  },
+  {
+    "amount": 6000000000,
+    "timestamp": 1540958247,
+    "height": 931927
+  },
+  {
+    "amount": 7000000000,
+    "timestamp": 1531283141,
+    "height": 610426
+  },
+  {
+    "amount": 8000000000,
+    "timestamp": 1540441230,
+    "height": 914771
+  },
+  {
+    "amount": 10000000000,
+    "timestamp": 1525718379,
+    "height": 432330
+  }
+]
+```
 
 #### /block/#
 

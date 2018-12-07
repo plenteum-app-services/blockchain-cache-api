@@ -323,6 +323,17 @@ app.get('/transactions/:search', (req, res) => {
   })
 })
 
+app.get('/amounts', (req, res) => {
+  database.getMixableAmounts().then((amounts) => {
+    console.log(amounts)
+    logHTTPRequest(req)
+    return res.json(amounts)
+  }).catch((error) => {
+    logHTTPError(req, error)
+    return res.status(404).send()
+  })
+})
+
 /* Allow us to get just the information that a wallet needs to find
    the transactions that belong to the wallet */
 app.post('/sync', (req, res) => {
