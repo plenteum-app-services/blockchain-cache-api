@@ -325,7 +325,6 @@ app.get('/transactions/:search', (req, res) => {
 
 app.get('/amounts', (req, res) => {
   database.getMixableAmounts().then((amounts) => {
-    console.log(amounts)
     logHTTPRequest(req)
     return res.json(amounts)
   }).catch((error) => {
