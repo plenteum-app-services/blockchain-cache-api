@@ -338,38 +338,49 @@ app.get('/amounts', (req, res) => {
 app.post('/sync', (req, res) => {
   const lastKnownBlockHashes = req.body.lastKnownBlockHashes || []
   const blockCount = toNumber(req.body.blockCount) || 100
+  const scanHeight = toNumber(req.body.scanHeight)
 
   /* If it's not an array then we didn't follow the directions */
-  if (!Array.isArray(lastKnownBlockHashes)) {
+  if (!Array.isArray(lastKnownBlockHashes) && !scanHeight) {
     logHTTPRequest(req, JSON.stringify(req.body))
     return res.status(400).send()
   }
 
-  var searchHashes = []
-  /* We need to loop through these and validate that we were
+  if (!scanHeight) {
+    var searchHashes = []
+    /* We need to loop through these and validate that we were
      given valid data to search through and not data that does
      not make any sense */
-  lastKnownBlockHashes.forEach((elem) => {
+    lastKnownBlockHashes.forEach((elem) => {
     /* We need to check to make sure that they sent us 64 hexadecimal characters */
-    if (elem.length === 64 && isHex(elem)) {
-      searchHashes.push(elem)
-    }
-  })
+      if (elem.length === 64 && isHex(elem)) {
+        searchHashes.push(elem)
+      }
+    })
 
-  /* If, after sanitizing our input, we don't have any hashes
+    /* If, after sanitizing our input, we don't have any hashes
      to search for, then we're going to stop right here and
      say something about it */
-  if (searchHashes.length === 0) {
-    return res.status(400).send()
-  }
+    if (searchHashes.length === 0) {
+      return res.status(400).send()
+    }
 
-  database.getWalletSyncData(searchHashes, blockCount).then((outputs) => {
-    logHTTPRequest(req, JSON.stringify(req.body))
-    return res.json(outputs)
-  }).catch((error) => {
-    logHTTPError(req, error)
-    return res.status(404).send()
-  })
+    database.getWalletSyncData(searchHashes, blockCount).then((outputs) => {
+      logHTTPRequest(req, JSON.stringify(req.body))
+      return res.json(outputs)
+    }).catch((error) => {
+      logHTTPError(req, error)
+      return res.status(404).send()
+    })
+  } else {
+    database.getWalletSyncDataByHeight(scanHeight, blockCount).then((outputs) => {
+      logHTTPRequest(req, JSON.stringify(req.body))
+      return res.json(outputs)
+    }).catch((error) => {
+      logHTTPError(req, error)
+      return res.status(404).send()
+    })
+  }
 })
 
 /* This is our catch all to return a 404-error */

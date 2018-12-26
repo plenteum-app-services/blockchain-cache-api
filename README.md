@@ -91,7 +91,7 @@ This package provides the following HTTP RESTful API methods:
 
 |Path|Description|Parameters|Response|
 |---|---|---|---|
-|/sync|Returns all the necessary information for a wallet to discover which outputs belong to it|```{"lastKnownBlockHashes":[...],"blockCount":100}``` See [Note](#post-payload)|See [Example Response](#response)|
+|/sync|Returns all the necessary information for a wallet to discover which outputs belong to it|```{"lastKnownBlockHashes":[...],"blockCount":100,"scanHeight": 500000}``` See [Note](#post-payload)|See [Example Response](#response)|
 
 ### Example Responses
 
@@ -1927,7 +1927,8 @@ The base payload has the following structure:
 ```javascript
 {
   "lastKnownBlockHashes": [...],
-  "blockCount": 100
+  "blockCount": 100,
+  "scanHeight": 500000
 }
 ```
 
@@ -1950,6 +1951,8 @@ The base payload has the following structure:
 14) ((n - 10) - 2^4)
 15) etc...
 16) Genesis block hash
+
+Alternatively, you can supply the `scanHeight` parameter and it will return data from that height. You can supply **one or the other** but not both.
 
 ##### Response
 
