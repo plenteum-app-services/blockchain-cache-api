@@ -336,7 +336,7 @@ app.get('/transactions/:search', (req, res) => {
 })
 
 app.get('/amounts', (req, res) => {
-  database.getMixableAmounts().then((amounts) => {
+  database.getMixableAmounts(Config.defaultMixins).then((amounts) => {
     logHTTPRequest(req)
     return res.json(amounts)
   }).catch((error) => {
