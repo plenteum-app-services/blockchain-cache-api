@@ -81,6 +81,7 @@ This package provides the following HTTP RESTful API methods:
 |/block/header/top|Returns the top block header|See [Example Response](#blockheadertop)|
 |/block/headers/*#height#*|Returns details regarding the 30 blocks preceeding the specified block including the specified block|See [Example Response](#blockheadersheight)|
 |/block/headers/*#height#*/bulk|Returns details regarding the 1,000 blocks preceeding the specified block including the specified block|See [Example Response](#blockheadersheight)|
+|/supply|Returns the current circulating supply of the currency|```12342342.12```|
 |/transaction/pool|Returns the transactions currently in the mempool|See [Example Response](#transactionpool)|
 |/transaction/*#hash#*|Returns details regarding the transaction with the specified hash|See [Example Response](#transaction)|
 |/transaction/*#hash#*/inputs|Returns the transcations inputs for the transaction with the specified hash|See [Example Response](#transactioninputs)|

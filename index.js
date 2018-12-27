@@ -89,6 +89,18 @@ app.get('/height', (req, res) => {
   })
 })
 
+/* Get the current circulating currency amount */
+app.get('/supply', (req, res) => {
+  database.getLastBlockHeader().then((header) => {
+    logHTTPRequest(req)
+    const supply = (header.alreadyGeneratedCoins / Math.pow(2, Config.coinDecimals)).toString()
+    return res.send(supply)
+  }).catch((error) => {
+    logHTTPError(req, error)
+    return res.status(500).send()
+  })
+})
+
 /* Get block information for the last 1,000 blocks before
    the specified block inclusive of the specified blocks */
 app.get('/block/headers/:search/bulk', (req, res) => {
