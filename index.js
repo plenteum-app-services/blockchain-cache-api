@@ -93,7 +93,7 @@ app.get('/height', (req, res) => {
 app.get('/supply', (req, res) => {
   database.getLastBlockHeader().then((header) => {
     logHTTPRequest(req)
-    const supply = (header.alreadyGeneratedCoins / Math.pow(2, Config.coinDecimals)).toString()
+    const supply = (header.alreadyGeneratedCoins / Math.pow(10, Config.coinDecimals)).toString()
     return res.send(supply)
   }).catch((error) => {
     logHTTPError(req, error)
