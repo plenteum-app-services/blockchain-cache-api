@@ -10,5 +10,6 @@
   "bindIp": "0.0.0.0",
   "httpPort": 80,
   "corsHeader": "*",
-  "coinDecimals": 2
+  "coinDecimals": 2,
+  "defaultMixins": 3
 }

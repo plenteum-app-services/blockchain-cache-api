@@ -345,6 +345,38 @@ app.get('/amounts', (req, res) => {
   })
 })
 
+/* Get random outputs for transaction mixing */
+app.post('/randomOutputs', (req, res) => {
+  const amounts = req.body.amounts || []
+  const mixin = toNumber(req.body.mixin) || Config.defaultMixins
+
+  /* If it's not an array then we didn't follow the directions */
+  if (!Array.isArray(amounts)) {
+    logHTTPError(req, JSON.stringify(req.body))
+    return res.status(400).send()
+  }
+
+  /* Check to make sure that we were passed numbers
+     for each value in the array */
+  for (var i = 0; i < amounts.length; i++) {
+    var amount = toNumber(amounts.length)
+    if (!amount) {
+      logHTTPError(req, JSON.stringify(req.body))
+      return res.status(400).send()
+    }
+    amounts[i] = amount
+  }
+
+  /* Go and try to get our random outputs */
+  database.getRandomOutputsForAmounts(amounts, mixin).then((randomOutputs) => {
+    logHTTPRequest(req, JSON.stringify(req.body))
+    return res.json(randomOutputs)
+  }).catch((error) => {
+    logHTTPError(req, error)
+    return res.status(500).send()
+  })
+})
+
 /* Allow us to get just the information that a wallet needs to find
    the transactions that belong to the wallet */
 app.post('/sync', (req, res) => {
@@ -354,7 +386,7 @@ app.post('/sync', (req, res) => {
 
   /* If it's not an array then we didn't follow the directions */
   if (!Array.isArray(lastKnownBlockHashes) && !scanHeight) {
-    logHTTPRequest(req, JSON.stringify(req.body))
+    logHTTPError(req, JSON.stringify(req.body))
     return res.status(400).send()
   }
 
