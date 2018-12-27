@@ -359,7 +359,7 @@ app.post('/randomOutputs', (req, res) => {
   /* Check to make sure that we were passed numbers
      for each value in the array */
   for (var i = 0; i < amounts.length; i++) {
-    var amount = toNumber(amounts.length)
+    var amount = toNumber(amounts[i])
     if (!amount) {
       logHTTPError(req, JSON.stringify(req.body))
       return res.status(400).send()
