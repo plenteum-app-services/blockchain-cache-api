@@ -756,6 +756,8 @@ This package provides the following HTTP RESTful API methods:
 ]
 ```
 
+</details>
+
 #### /block/#
 
 <details><summary>click to view</summary>
