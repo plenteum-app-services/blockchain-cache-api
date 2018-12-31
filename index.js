@@ -60,6 +60,14 @@ const app = Express()
 /* Automatically decode JSON input from client requests */
 app.use(BodyParser.json())
 
+/* Catch body-parser errors */
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError) {
+    return res.status(400).send()
+  }
+  next()
+})
+
 /* Set up a few of our headers to make this API more functional */
 app.use((req, res, next) => {
   res.header('X-Requested-With', '*')
