@@ -14,5 +14,5 @@
   "defaultMixins": 3,
   "queues": {
     "relayAgent": "send.transaction"
-  },
+  }
 }
