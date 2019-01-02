@@ -105,7 +105,7 @@ app.get('/height', (req, res) => {
     logHTTPRequest(req)
     return res.json({
       height: header.height,
-      networkHeight: networkData.network_height
+      network_height: networkData.network_height
     })
   }).catch((error) => {
     logHTTPError(req, error)
