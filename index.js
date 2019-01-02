@@ -6,12 +6,52 @@
 
 const Config = require('./config.json')
 const DatabaseBackend = require('./lib/databaseBackend.js')
+const RabbitMQ = require('amqplib')
+const UUID = require('uuid/v4')
 const util = require('util')
 const Compression = require('compression')
 const Helmet = require('helmet')
 const BodyParser = require('body-parser')
 const Express = require('express')
 const isHex = require('is-hex')
+
+/* We need to connect to rabbit to connect back to our
+   blockchain relay agents to make sure that we can
+   handle the sendrawtransaction calls */
+const publicRabbitHost = process.env.RABBIT_PUBLIC_SERVER || 'localhost'
+const publicRabbitUsername = process.env.RABBIT_PUBLIC_USERNAME || ''
+const publicRabbitPassword = process.env.RABBIT_PUBLIC_PASSWORD || ''
+
+/* Helps us to build the RabbitMQ connection string */
+function buildConnectionString (host, username, password) {
+  log(util.format('Setting up connection to %s@%s...', username, host))
+  var result = ['amqp://']
+
+  if (username.length !== 0 && password.length !== 0) {
+    result.push(username + ':')
+    result.push(password + '@')
+  }
+
+  result.push(host)
+
+  return result.join('')
+}
+
+var publicChannel
+var replyQueue
+(async function () {
+  /* Set up our access to the necessary RabbitMQ systems */
+  var publicRabbit = await RabbitMQ.connect(buildConnectionString(publicRabbitHost, publicRabbitUsername, publicRabbitPassword))
+  publicChannel = await publicRabbit.createChannel()
+
+  /* Set up the RabbitMQ queues */
+  await publicChannel.assertQueue(Config.queues.relayAgent, {
+    durable: true
+  })
+
+  /* Create our worker's reply queue */
+  replyQueue = await publicChannel.assertQueue('', { exclusive: true, durable: false })
+})()
 
 /* Let's set up a standard logger. Sure it looks cheap but it's
    reliable and won't crash */
@@ -452,6 +492,63 @@ app.post('/sync', (req, res) => {
       return res.status(404).send()
     })
   }
+})
+
+/* Allows us to provide a daemon like /sendrawtransaction
+   endpoint that works with our blockchain relay agent workers */
+app.post('/sendrawtransaction', (req, res) => {
+  const transaction = req.body.tx_as_hex || false
+  var cancelTimer
+
+  /* If there is no transaction or the data isn't hex... we're done here */
+  if (!transaction || !isHex(transaction)) {
+    logHTTPError(req, 'Invalid or no transaction hex data supplied')
+    return res.status(400).send()
+  }
+
+  /* generate a random request ID */
+  const requestId = UUID().toString().replace(/-/g, '')
+
+  /* We need to define how we're going to handle responses on our queue */
+  publicChannel.consume(replyQueue.queue, (message) => {
+    /* If we got a message back and it was meant for this request, we'll handle it now */
+    if (message !== null && message.properties.correlationId === requestId) {
+      const response = JSON.parse(message.content.toString())
+
+      /* Acknowledge receipt */
+      publicChannel.ack(message)
+
+      /* Cancel our cancel timer */
+      if (cancelTimer !== null) {
+        clearTimeout(cancelTimer)
+      }
+
+      /* Log and spit back the response */
+      logHTTPRequest(req, JSON.stringify(req.body))
+      return res.json(response)
+    } else {
+      /* It wasn't for us, don't acknowledge the message */
+      publicChannel.nack(message)
+    }
+  })
+
+  /* Construct a message that our blockchain relay agent understands */
+  const tx = {
+    rawTransaction: transaction
+  }
+
+  /* Send it across to the blockchain relay agent workers */
+  publicChannel.sendToQueue(Config.queues.relayAgent, Buffer.from(JSON.stringify(tx)), {
+    correlationId: requestId,
+    replyTo: replyQueue.queue,
+    expiration: 5000
+  })
+
+  /* Set up our cancel timer in case the message doesn't get handled */
+  cancelTimer = setTimeout(() => {
+    logHTTPError(req, 'Could not complete request with relay agent')
+    return res.status(500).send()
+  }, 5500)
 })
 
 /* This is our catch all to return a 404-error */

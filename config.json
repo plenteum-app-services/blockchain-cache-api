@@ -11,5 +11,8 @@
   "httpPort": 80,
   "corsHeader": "*",
   "coinDecimals": 2,
-  "defaultMixins": 3
+  "defaultMixins": 3,
+  "queues": {
+    "relayAgent": "send.transaction"
+  },
 }
