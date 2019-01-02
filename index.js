@@ -84,12 +84,28 @@ app.use(Helmet())
 /* Last but certainly not least, enable compression because we're going to need it */
 app.use(Compression())
 
+/* Return the underlying information about the daemon(s) we are polling */
+app.get('/info', (req, res) => {
+  database.getInfo().then((info) => {
+    logHTTPRequest(req)
+    return res.json(info)
+  }).catch((error) => {
+    logHTTPError(req, error)
+    return res.status(500).send()
+  })
+})
+
 /* Get information regarding the current cache height */
 app.get('/height', (req, res) => {
-  database.getLastBlockHeader().then((header) => {
+  var networkData
+  database.getInfo().then((info) => {
+    networkData = info
+    return database.getLastBlockHeader()
+  }).then((header) => {
     logHTTPRequest(req)
     return res.json({
-      height: header.height
+      height: header.height,
+      networkHeight: networkData.network_height
     })
   }).catch((error) => {
     logHTTPError(req, error)
