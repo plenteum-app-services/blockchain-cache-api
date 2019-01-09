@@ -552,6 +552,11 @@ app.post('/sendrawtransaction', (req, res) => {
   }, 5500)
 })
 
+/* Response to options requests for preflights */
+app.options('*', (req, res) => {
+  return res.status(200).send()
+})
+
 /* This is our catch all to return a 404-error */
 app.all('*', (req, res) => {
   logHTTPError(req, 'Requested URL not Found (404)')
