@@ -168,6 +168,69 @@ app.get('/supply', (req, res) => {
   })
 })
 
+/* Submit a new block to the network */
+app.post('/block', (req, res) => {
+  const blockBlob = req.body.block || false
+
+  if (!blockBlob || !isHex(blockBlob)) {
+    const message = 'Invalid block blob format'
+    logHTTPError(req, message)
+    return res.status(400).json({ message: message })
+  }
+
+  var cancelTimer
+
+  /* generate a random request ID */
+  const requestId = UUID().toString().replace(/-/g, '')
+
+  /* We need to define how we're going to handle responses on our queue */
+  publicChannel.consume(replyQueue.queue, (message) => {
+    /* If we got a message back and it was meant for this request, we'll handle it now */
+    if (message !== null && message.properties.correlationId === requestId) {
+      const response = JSON.parse(message.content.toString())
+
+      /* Acknowledge receipt */
+      publicChannel.ack(message)
+
+      /* Cancel our cancel timer */
+      if (cancelTimer !== null) {
+        clearTimeout(cancelTimer)
+      }
+
+      if (response.error) {
+        /* Log and spit back the response */
+        logHTTPError(req, JSON.stringify(req.body))
+        return res.status(400).json({ message: response.error })
+      } else {
+        /* Log and spit back the response */
+        logHTTPRequest(req, JSON.stringify(req.body))
+        return res.send(201).send()
+      }
+    } else {
+      /* It wasn't for us, don't acknowledge the message */
+      publicChannel.nack(message)
+    }
+  })
+
+  /* Construct a message that our blockchain relay agent understands */
+  const payload = {
+    blockBlob: blockBlob
+  }
+
+  /* Send it across to the blockchain relay agent workers */
+  publicChannel.sendToQueue(Config.queues.relayAgent, Buffer.from(JSON.stringify(payload)), {
+    correlationId: requestId,
+    replyTo: replyQueue.queue,
+    expiration: 5000
+  })
+
+  /* Set up our cancel timer in case the message doesn't get handled */
+  cancelTimer = setTimeout(() => {
+    logHTTPError(req, 'Could not complete request with relay agent')
+    return res.status(500).send()
+  }, 5500)
+})
+
 /* Get block information for the last 1,000 blocks before
    the specified block inclusive of the specified blocks */
 app.get('/block/headers/:search/bulk', (req, res) => {
