@@ -269,6 +269,91 @@ app.get('/block/count', (req, res) => {
   })
 })
 
+/* Get a block template for mining */
+app.post('/block/template', (req, res) => {
+  const address = req.body.address || false
+  const reserveSize = toNumber(req.body.reserveSize)
+
+  /* If they didn't provide a reserve size then there's little we can do here */
+  if (!reserveSize) {
+    var error = 'Missing reserveSize value'
+    logHTTPError(req, error)
+    return res.status(400).json({ message: error })
+  }
+
+  /* If the reserveSize is out of range, then throw an error */
+  if (reserveSize < 0 || reserveSize > 255) {
+    error = 'reserveSize out of range'
+    logHTTPError(req, error)
+    return res.status(400).json({ message: error })
+  }
+
+  /* To get a block template, an address must be supplied */
+  if (!address) {
+    error = 'Missing address value'
+    logHTTPError(req, error)
+    return res.status(400).json({ message: error })
+  }
+
+  var cancelTimer
+
+  /* generate a random request ID */
+  const requestId = UUID().toString().replace(/-/g, '')
+
+  /* We need to define how we're going to handle responses on our queue */
+  publicChannel.consume(replyQueue.queue, (message) => {
+    /* If we got a message back and it was meant for this request, we'll handle it now */
+    if (message !== null && message.properties.correlationId === requestId) {
+      const response = JSON.parse(message.content.toString())
+
+      /* Acknowledge receipt */
+      publicChannel.ack(message)
+
+      /* Cancel our cancel timer */
+      if (cancelTimer !== null) {
+        clearTimeout(cancelTimer)
+      }
+
+      if (response.error) {
+        /* Log and spit back the response */
+        logHTTPError(req, JSON.stringify(req.body))
+        return res.status(400).json({ message: response.error })
+      } else {
+        /* Log and spit back the response */
+        logHTTPRequest(req, JSON.stringify(req.body))
+        return res.json({
+          blocktemplate: response.blocktemplate_blob,
+          difficulty: response.difficulty,
+          height: response.height,
+          reservedOffset: response.reserved_offset
+        })
+      }
+    } else {
+      /* It wasn't for us, don't acknowledge the message */
+      publicChannel.nack(message)
+    }
+  })
+
+  /* Construct a message that our blockchain relay agent understands */
+  const payload = {
+    walletAddress: address,
+    reserveSize: reserveSize
+  }
+
+  /* Send it across to the blockchain relay agent workers */
+  publicChannel.sendToQueue(Config.queues.relayAgent, Buffer.from(JSON.stringify(payload)), {
+    correlationId: requestId,
+    replyTo: replyQueue.queue,
+    expiration: 5000
+  })
+
+  /* Set up our cancel timer in case the message doesn't get handled */
+  cancelTimer = setTimeout(() => {
+    logHTTPError(req, 'Could not complete request with relay agent')
+    return res.status(500).send()
+  }, 5500)
+})
+
 /* Get block information for the specified block (by hash or height) */
 app.get('/block/:search', (req, res) => {
   const idx = req.params.search
