@@ -700,6 +700,34 @@ app.post('/sendrawtransaction', (req, res) => {
   }, 5500)
 })
 
+/* Legacy daemon API calls provided for limited support */
+
+app.post('/getwalletsyncdata', (req, res) => {
+  const startHeight = toNumber(req.body.startHeight)
+  const startTimestamp = toNumber(req.body.startTimestamp)
+  const blockHashCheckpoints = req.body.blockHashCheckpoints || []
+
+  blockHashCheckpoints.forEach((checkpoint) => {
+    /* If any of the supplied block hashes aren't hexadecimal then we're done */
+    if (!isHex(checkpoint)) {
+      return res.status(400).send()
+    }
+  })
+
+  /* We cannot supply both values */
+  if (startHeight > 0 && startTimestamp > 0) {
+    return res.status(400).send()
+  }
+
+  database.legacyGetWalletSyncData(startHeight, startTimestamp, blockHashCheckpoints).then((results) => {
+    logHTTPRequest(req, JSON.stringify(req.body))
+    return res.json({ items: results, status: 'OK' })
+  }).catch((error) => {
+    logHTTPError(req, error)
+    return res.status(500).send()
+  })
+})
+
 /* Response to options requests for preflights */
 app.options('*', (req, res) => {
   return res.status(200).send()
