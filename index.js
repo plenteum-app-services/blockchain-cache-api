@@ -728,6 +728,24 @@ app.post('/getwalletsyncdata', (req, res) => {
   })
 })
 
+app.post('/get_transactions_status', (req, res) => {
+  const transactionHashes = req.body.transactionHashes || []
+
+  transactionHashes.forEach((hash) => {
+    if (!isHex(hash)) {
+      return res.status(400).send()
+    }
+  })
+
+  database.getTransactionsStatus(transactionHashes).then((result) => {
+    logHTTPRequest(req, JSON.stringify(req.body))
+    return res.json(result)
+  }).catch((error) => {
+    logHTTPError(req, error)
+    return res.status(500).send()
+  })
+})
+
 /* Response to options requests for preflights */
 app.options('*', (req, res) => {
   return res.status(200).send()
