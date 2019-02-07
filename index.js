@@ -642,9 +642,9 @@ app.post('/sync', (req, res) => {
   }
 })
 
-/* Allows us to provide a daemon like /sendrawtransaction
+/* Allows us to provide a method to send a raw transaction on the network
    endpoint that works with our blockchain relay agent workers */
-app.post('/sendrawtransaction', (req, res) => {
+app.post('/transaction', (req, res) => {
   const transaction = req.body.tx_as_hex || false
   var cancelTimer
 
@@ -744,6 +744,64 @@ app.post('/get_transactions_status', (req, res) => {
     logHTTPError(req, error)
     return res.status(500).send()
   })
+})
+
+/* Allows us to provide a daemon like /sendrawtransaction
+   endpoint that works with our blockchain relay agent workers */
+app.post('/sendrawtransaction', (req, res) => {
+  const transaction = req.body.tx_as_hex || false
+  var cancelTimer
+
+  /* If there is no transaction or the data isn't hex... we're done here */
+  if (!transaction || !isHex(transaction)) {
+    logHTTPError(req, 'Invalid or no transaction hex data supplied')
+    return res.status(400).send()
+  }
+
+  /* generate a random request ID */
+  const requestId = UUID().toString().replace(/-/g, '')
+
+  /* We need to define how we're going to handle responses on our queue */
+  publicChannel.consume(replyQueue.queue, (message) => {
+    /* If we got a message back and it was meant for this request, we'll handle it now */
+    if (message !== null && message.properties.correlationId === requestId) {
+      const response = JSON.parse(message.content.toString())
+
+      /* Acknowledge receipt */
+      publicChannel.ack(message)
+
+      /* Cancel our cancel timer */
+      if (cancelTimer !== null) {
+        clearTimeout(cancelTimer)
+      }
+
+      /* Log and spit back the response */
+      logHTTPRequest(req, JSON.stringify(req.body))
+      return res.json(response)
+    } else {
+      /* It wasn't for us, don't acknowledge the message */
+      publicChannel.nack(message)
+    }
+  })
+
+  /* Construct a message that our blockchain relay agent understands */
+  const tx = {
+    rawTransaction: transaction,
+    hash: 'webrequest'
+  }
+
+  /* Send it across to the blockchain relay agent workers */
+  publicChannel.sendToQueue(Config.queues.relayAgent, Buffer.from(JSON.stringify(tx)), {
+    correlationId: requestId,
+    replyTo: replyQueue.queue,
+    expiration: 5000
+  })
+
+  /* Set up our cancel timer in case the message doesn't get handled */
+  cancelTimer = setTimeout(() => {
+    logHTTPError(req, 'Could not complete request with relay agent')
+    return res.status(500).send()
+  }, 5500)
 })
 
 /* Response to options requests for preflights */
