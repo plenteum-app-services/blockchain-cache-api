@@ -168,6 +168,18 @@ app.get('/supply', (req, res) => {
   })
 })
 
+/* Returns the latest 2,880 (1 day) block statistics to help
+   better understand the state of the network */
+app.get('/chain/stats', (req, res) => {
+  database.getRecentChainStats().then((blocks) => {
+    logHTTPRequest(req)
+    return res.json(blocks)
+  }).catch((error) => {
+    logHTTPError(req, error)
+    return res.status(500).send()
+  })
+})
+
 /* Submit a new block to the network */
 app.post('/block', (req, res) => {
   const blockBlob = req.body.block || false
