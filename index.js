@@ -1,4 +1,4 @@
-// Copyright (c) 2018, TurtlePay Developers
+// Copyright (c) 2018-2019, TurtlePay Developers
 //
 // Please see the included LICENSE file for more information.
 
@@ -15,12 +15,35 @@ const BodyParser = require('body-parser')
 const Express = require('express')
 const isHex = require('is-hex')
 
-/* We need to connect to rabbit to connect back to our
-   blockchain relay agents to make sure that we can
-   handle the sendrawtransaction calls */
-const publicRabbitHost = process.env.RABBIT_PUBLIC_SERVER || 'localhost'
-const publicRabbitUsername = process.env.RABBIT_PUBLIC_USERNAME || ''
-const publicRabbitPassword = process.env.RABBIT_PUBLIC_PASSWORD || ''
+/* Load in our environment variables */
+const env = {
+  mysql: {
+    host: process.env.MYSQL_HOST || 'localhost',
+    port: process.env.MYSQL_PORT || 3306,
+    username: process.env.MYSQL_USERNAME || false,
+    password: process.env.MYSQL_PASSWORD || false,
+    database: process.env.MYSQL_DATABASE || false,
+    connectionLimit: process.env.MYSQL_CONNECTION_LIMIT || 10
+  },
+  publicRabbit: {
+    host: process.env.RABBIT_PUBLIC_SERVER || 'localhost',
+    username: process.env.RABBIT_PUBLIC_USERNAME || '',
+    password: process.env.RABBIT_PUBLIC_PASSWORD || ''
+  }
+}
+
+/* Let's set up a standard logger. Sure it looks cheap but it's
+   reliable and won't crash */
+function log (message) {
+  console.log(util.format('%s: %s', (new Date()).toUTCString(), message))
+}
+
+/* Sanity check to make sure we have connection information
+   for the database */
+if (!env.mysql.host || !env.mysql.port || !env.mysql.username || !env.mysql.password) {
+  log('It looks like you did not export all of the required connection information into your environment variables before attempting to start the service.')
+  process.exit(1)
+}
 
 /* Helps us to build the RabbitMQ connection string */
 function buildConnectionString (host, username, password) {
@@ -41,7 +64,7 @@ var publicChannel
 var replyQueue
 (async function () {
   /* Set up our access to the necessary RabbitMQ systems */
-  var publicRabbit = await RabbitMQ.connect(buildConnectionString(publicRabbitHost, publicRabbitUsername, publicRabbitPassword))
+  var publicRabbit = await RabbitMQ.connect(buildConnectionString(env.publicRabbit.host, env.publicRabbit.username, env.publicRabbit.password))
   publicChannel = await publicRabbit.createChannel()
 
   /* Set up the RabbitMQ queues */
@@ -52,12 +75,6 @@ var replyQueue
   /* Create our worker's reply queue */
   replyQueue = await publicChannel.assertQueue('', { exclusive: true, durable: false })
 })()
-
-/* Let's set up a standard logger. Sure it looks cheap but it's
-   reliable and won't crash */
-function log (message) {
-  console.log(util.format('%s: %s', (new Date()).toUTCString(), message))
-}
 
 function logHTTPRequest (req, params) {
   params = params || ''
@@ -85,12 +102,12 @@ function toNumber (term) {
 
 /* Set up our database connection */
 const database = new DatabaseBackend({
-  host: Config.mysql.host,
-  port: Config.mysql.port,
-  username: Config.mysql.username,
-  password: Config.mysql.password,
-  database: Config.mysql.database,
-  connectionLimit: Config.mysql.connectionLimit
+  host: env.mysql.host,
+  port: env.mysql.port,
+  username: env.mysql.username,
+  password: env.mysql.password,
+  database: env.mysql.database,
+  connectionLimit: env.mysql.connectionLimit
 })
 
 log('Connected to database backend at ' + database.host + ':' + database.port)
@@ -637,6 +654,7 @@ app.post('/sync', (req, res) => {
     }
 
     database.getWalletSyncData(searchHashes, blockCount).then((outputs) => {
+      req.body.lastKnownBlockHashes = req.body.lastKnownBlockHashes.length
       logHTTPRequest(req, JSON.stringify(req.body))
       return res.json(outputs)
     }).catch((error) => {
@@ -733,6 +751,7 @@ app.post('/getwalletsyncdata', (req, res) => {
   }
 
   database.legacyGetWalletSyncData(startHeight, startTimestamp, blockHashCheckpoints, blockCount).then((results) => {
+    req.body.blockHashCheckpoints = req.body.blockHashCheckpoints.length
     logHTTPRequest(req, JSON.stringify(req.body))
     return res.json({ items: results, status: 'OK' })
   }).catch((error) => {

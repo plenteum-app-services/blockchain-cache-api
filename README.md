@@ -31,17 +31,8 @@ cd blockchain-cache-api && npm install
 
 **Note:** Make sure you use a read-only database user for security reasons
 
-  
 ```javascript
 {
-  "mysql": {
-    "host": "localhost",
-    "port": 3306,
-    "username": "root",
-    "password": "password",
-    "database": "turtlecoin",
-    "connectionLimit": 10
-  },
   "bindIp": "0.0.0.0",
   "httpPort": 80,
   "corsHeader": "*"
@@ -51,6 +42,11 @@ cd blockchain-cache-api && npm install
 4) Fire up the script
 
 ```bash
+export MYSQL_HOST=localhost
+export MYSQL_PORT=3306
+export MYSQL_USERNAME=yourdbusername
+export MYSQL_PASSWORD=yourdbpassword
+export MYSQL_DATABASE=yourdbname
 node index.js
 ```
 
