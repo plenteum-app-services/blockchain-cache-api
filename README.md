@@ -6,12 +6,14 @@
 ## Prerequisites
 
 * MariaDB/MySQL with InnoDB support
+* [RabbitMQ](https://www.rabbitmq.com/)
 * [TurtlePay: Blockchain Data Collection Agent](https://github.com/TurtlePay/blockchain-data-collection-agent)
+* [TurtlePay: Blockchain Relay Agent](https://github.com/TurtlePay/blockchain-relay-agent)
 * [Node.js](https://nodejs.org/) LTS
 
 ## Foreword
 
-We know that this documentation needs cleaned up and made easier to read. We'll compile it as part of the full documentation as the project works forward.
+We know that this documentation needs cleaned up and made easier to read. We'll compile it as part of the full documentation as the project moves forward.
 
 ## Setup
 
@@ -42,6 +44,9 @@ cd blockchain-cache-api && npm install
 4) Fire up the script
 
 ```bash
+export RABBIT_PUBLIC_SERVER=localhost
+export RABBIT_PUBLIC_USERNAME=yourrabbitmqusername
+export RABBIT_PUBLIC_PASSWORD=yourrabbitmqpassword
 export MYSQL_HOST=localhost
 export MYSQL_PORT=3306
 export MYSQL_USERNAME=yourdbusername
