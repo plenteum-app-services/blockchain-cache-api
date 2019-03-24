@@ -71,6 +71,13 @@ var replyQueue
   var publicRabbit = await RabbitMQ.connect(buildConnectionString(env.publicRabbit.host, env.publicRabbit.username, env.publicRabbit.password))
   publicChannel = await publicRabbit.createChannel()
 
+  publicRabbit.on('error', (error) => {
+    log(util.format('[ERROR] %s', error))
+  })
+  publicChannel.on('error', (error) => {
+    log(util.format('[ERROR] %s', error))
+  })
+
   /* Set up the RabbitMQ queues */
   await publicChannel.assertQueue(Config.queues.relayAgent, {
     durable: true
