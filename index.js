@@ -12,6 +12,7 @@ const Express = require('express')
 const Helmet = require('helmet')
 const isHex = require('is-hex')
 const RabbitMQ = require('amqplib')
+const TurtleCoinUtils = require('turtlecoin-utils').CryptoNote
 const util = require('util')
 const UUID = require('uuid/v4')
 
@@ -44,6 +45,9 @@ if (!env.mysql.host || !env.mysql.port || !env.mysql.username || !env.mysql.pass
   log('It looks like you did not export all of the required connection information into your environment variables before attempting to start the service.')
   process.exit(1)
 }
+
+/* Create an instance of the TurtleCoin Utils */
+const coinUtils = new TurtleCoinUtils()
 
 /* Helps us to build the RabbitMQ connection string */
 function buildConnectionString (host, username, password) {
@@ -387,6 +391,14 @@ app.post('/block/template', (req, res) => {
     return res.status(400).json({ message: error })
   }
 
+  try {
+    coinUtils.decodeAddress(address)
+  } catch (e) {
+    error = 'Invalid address supplied'
+    logHTTPError(req, error)
+    return res.status(400).json({ message: error })
+  }
+
   var cancelTimer
 
   /* generate a random request ID */
@@ -713,7 +725,7 @@ app.post('/transaction', (req, res) => {
   /* Construct a message that our blockchain relay agent understands */
   const tx = {
     rawTransaction: transaction,
-    hash: 'webrequest'
+    hash: coinUtils.cnFastHash(transaction)
   }
 
   /* Send it across to the blockchain relay agent workers */
