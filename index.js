@@ -838,7 +838,7 @@ app.post('/sendrawtransaction', (req, res) => {
   /* Construct a message that our blockchain relay agent understands */
   const tx = {
     rawTransaction: transaction,
-    hash: 'webrequest'
+    hash: coinUtils.cnFastHash(transaction)
   }
 
   /* Send it across to the blockchain relay agent workers */
