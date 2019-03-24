@@ -4,16 +4,16 @@
 
 'use strict'
 
-const Config = require('./config.json')
-const DatabaseBackend = require('./lib/databaseBackend.js')
-const RabbitMQ = require('amqplib')
-const UUID = require('uuid/v4')
-const util = require('util')
-const Compression = require('compression')
-const Helmet = require('helmet')
 const BodyParser = require('body-parser')
+const Config = require('./config.json')
+const Compression = require('compression')
+const DatabaseBackend = require('./lib/databaseBackend.js')
 const Express = require('express')
+const Helmet = require('helmet')
 const isHex = require('is-hex')
+const RabbitMQ = require('amqplib')
+const util = require('util')
+const UUID = require('uuid/v4')
 
 /* Load in our environment variables */
 const env = {
