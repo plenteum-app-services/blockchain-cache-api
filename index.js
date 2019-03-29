@@ -752,6 +752,7 @@ app.post('/transaction', (req, res) => {
 /* Legacy daemon API calls provided for limited support */
 
 app.get('/fee', (req, res) => {
+  logHTTPRequest(req)
   return res.json({
     address: Config.nodeFee.address,
     amount: Config.nodeFee.amount,
