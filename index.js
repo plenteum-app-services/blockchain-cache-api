@@ -751,6 +751,14 @@ app.post('/transaction', (req, res) => {
 
 /* Legacy daemon API calls provided for limited support */
 
+app.get('/fee', (req, res) => {
+  return res.json({
+    address: Config.nodeFee.address,
+    amount: Config.nodeFee.amount,
+    status: 'OK'
+  })
+})
+
 app.post('/getwalletsyncdata', (req, res) => {
   const startHeight = toNumber(req.body.startHeight)
   const startTimestamp = toNumber(req.body.startTimestamp)

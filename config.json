@@ -6,5 +6,9 @@
   "defaultMixins": 3,
   "queues": {
     "relayAgent": "request.network"
+  },
+  "nodeFee": {
+    "address": "",
+    "amount": 0
   }
 }
