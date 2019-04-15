@@ -156,6 +156,7 @@ app.use(Compression())
 app.get('/info', (req, res) => {
   database.getInfo().then((info) => {
     logHTTPRequest(req)
+    info.isCacheApi = true
     return res.json(info)
   }).catch((error) => {
     logHTTPError(req, error)
