@@ -778,9 +778,9 @@ app.post('/getwalletsyncdata/preflight', (req, res) => {
     return res.status(400).send()
   }
 
-  database.legacyGetWalletSyncDataPreflight(startHeight, startTimestamp, blockHashCheckpoints).then((height) => {
+  database.legacyGetWalletSyncDataPreflight(startHeight, startTimestamp, blockHashCheckpoints).then((syncData) => {
     logHTTPRequest(req, JSON.stringify(req.body))
-    return res.json({ height: height, status: 'OK' })
+    return res.json({ height: syncData.height, blockCount: syncData.blockCount, status: 'OK' })
   }).catch((error) => {
     logHTTPError(req, error)
     return res.status(500).send()
