@@ -346,7 +346,7 @@ app.get('/block/header/:search', (req, res) => {
     })
   } else {
     /* If they didn't pass us a number, we need to get out of here */
-    if (!toNumber(idx)) {
+    if (toNumber(idx) === false) {
       logHTTPError(req)
       return res.status(400).send()
     }
@@ -487,7 +487,7 @@ app.get('/block/:search', (req, res) => {
     })
   } else {
     /* If they didn't pass us a number, we need to get out of here */
-    if (!toNumber(idx)) {
+    if (toNumber(idx) === false) {
       logHTTPError(req)
       return res.status(400).send()
     }
