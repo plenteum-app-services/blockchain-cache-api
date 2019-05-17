@@ -807,7 +807,7 @@ app.post('/getwalletsyncdata', (req, res) => {
   }
 
   database.legacyGetWalletSyncData(startHeight, startTimestamp, blockHashCheckpoints, blockCount).then((results) => {
-    req.body.blockHashCheckpoints = req.body.blockHashCheckpoints.length
+    req.body.blockHashCheckpoints = blockHashCheckpoints.length
     logHTTPRequest(req, JSON.stringify(req.body))
     return res.json({ items: results, status: 'OK' })
   }).catch((error) => {
