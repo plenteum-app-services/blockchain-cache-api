@@ -793,6 +793,7 @@ app.post('/getwalletsyncdata', (req, res) => {
   const startTimestamp = toNumber(req.body.startTimestamp)
   const blockHashCheckpoints = req.body.blockHashCheckpoints || []
   const blockCount = toNumber(req.body.blockCount) || 100
+  const skipEmptyBlocks = (req.body.skipEmptyBlocks)
 
   blockHashCheckpoints.forEach((checkpoint) => {
     /* If any of the supplied block hashes aren't hexadecimal then we're done */
@@ -806,7 +807,7 @@ app.post('/getwalletsyncdata', (req, res) => {
     return res.status(400).send()
   }
 
-  database.legacyGetWalletSyncData(startHeight, startTimestamp, blockHashCheckpoints, blockCount).then((results) => {
+  database.legacyGetWalletSyncData(startHeight, startTimestamp, blockHashCheckpoints, blockCount, skipEmptyBlocks).then((results) => {
     req.body.blockHashCheckpoints = blockHashCheckpoints.length
     logHTTPRequest(req, JSON.stringify(req.body))
     return res.json({ items: results, status: 'OK' })
