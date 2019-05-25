@@ -851,7 +851,26 @@ app.post('/getwalletsyncdata', (req, res) => {
   database.legacyGetWalletSyncData(startHeight, startTimestamp, blockHashCheckpoints, blockCount, skipCoinbaseTransactions).then((results) => {
     req.body.blockHashCheckpoints = blockHashCheckpoints.length
     logHTTPRequest(req, JSON.stringify(req.body))
-    return res.json({ items: results, status: 'OK' })
+
+    if (results.length !== 0) {
+      return res.json({
+        items: results,
+        status: 'OK',
+        synced: false
+      })
+    } else {
+      database.getLastBlockHeader().then((block) => {
+        return res.json({
+          items: results,
+          status: 'OK',
+          synced: true,
+          topBlock: {
+            height: block.height,
+            hash: block.hash
+          }
+        })
+      })
+    }
   }).catch((error) => {
     logHTTPError(req, error)
     return res.status(500).send()
