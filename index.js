@@ -164,8 +164,40 @@ app.get('/info', (req, res) => {
   })
 })
 
+app.get('/getinfo', (req, res) => {
+  database.getInfo().then((info) => {
+    logHTTPRequest(req)
+    info.isCacheApi = true
+    return res.json(info)
+  }).catch((error) => {
+    logHTTPError(req, error)
+    return res.status(500).send()
+  })
+})
+
 /* Get information regarding the current cache height */
 app.get('/height', (req, res) => {
+  var networkData
+  database.getInfo().then((info) => {
+    networkData = info
+    return database.getLastBlockHeader()
+  }).then((header) => {
+    logHTTPRequest(req)
+    /* We shave one off the cached network_height as the underlying daemons
+       misreport this information. The network_height indicates the block
+       that the network is looking for, not the last block it found */
+    return res.json({
+      height: header.height,
+      network_height: networkData.network_height - 1
+    })
+  }).catch((error) => {
+    logHTTPError(req, error)
+    return res.status(500).send()
+  })
+})
+
+/* Get information regarding the current cache height */
+app.get('/getheight', (req, res) => {
   var networkData
   database.getInfo().then((info) => {
     networkData = info
@@ -753,6 +785,15 @@ app.post('/transaction', (req, res) => {
 /* Legacy daemon API calls provided for limited support */
 
 app.get('/fee', (req, res) => {
+  logHTTPRequest(req)
+  return res.json({
+    address: Config.nodeFee.address,
+    amount: Config.nodeFee.amount,
+    status: 'OK'
+  })
+})
+
+app.get('/feeinfo', (req, res) => {
   logHTTPRequest(req)
   return res.json({
     address: Config.nodeFee.address,
