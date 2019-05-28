@@ -900,6 +900,13 @@ app.post('/getwalletsyncdata', (req, res) => {
   database.legacyGetWalletSyncData(startHeight, startTimestamp, blockHashCheckpoints, blockCount, skipCoinbaseTransactions).then((results) => {
     req.body.blockHashCheckpoints = blockHashCheckpoints.length
 
+    if (results.length >= 1) {
+      req.body.range = {
+        start: results[0].blockHeight,
+        end: results[results.length - 1].blockHeight
+      }
+    }
+
     if (results.length !== 0) {
       logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
       return res.json({
@@ -933,7 +940,7 @@ app.get('/getwalletsyncdata/:height/:count', (req, res) => {
   const blockCount = toNumber(req.params.count) || 100
 
   database.legacyGetWalletSyncDataLite(startHeight, blockCount).then((results) => {
-    logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
+    logHTTPRequest(req, process.hrtime(start))
     return res.json({ items: results, status: 'OK' })
   }).catch((error) => {
     logHTTPError(req, error, process.hrtime(start))
@@ -947,7 +954,7 @@ app.get('/getwalletsyncdata/:height', (req, res) => {
   const blockCount = toNumber(req.params.count) || 100
 
   database.legacyGetWalletSyncDataLite(startHeight, blockCount).then((results) => {
-    logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
+    logHTTPRequest(req, process.hrtime(start))
     return res.json({ items: results, status: 'OK' })
   }).catch((error) => {
     logHTTPError(req, error, process.hrtime(start))
