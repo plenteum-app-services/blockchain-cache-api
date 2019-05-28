@@ -10,5 +10,6 @@
   "nodeFee": {
     "address": "",
     "amount": 0
-  }
+  },
+  "useCompression": false
 }

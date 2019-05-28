@@ -149,8 +149,10 @@ app.use((req, res, next) => {
 /* Set up our system to use Helmet */
 app.use(Helmet())
 
-/* Last but certainly not least, enable compression because we're going to need it */
-app.use(Compression())
+/* If we are configured to use compression in our config, we will activate it */
+if (Config.useCompression) {
+  app.use(Compression())
+}
 
 /* Return the underlying information about the daemon(s) we are polling */
 app.get('/info', (req, res) => {
