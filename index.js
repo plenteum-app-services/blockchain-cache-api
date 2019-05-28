@@ -87,14 +87,28 @@ var replyQueue
   replyQueue = await publicChannel.assertQueue('', { exclusive: true, durable: false })
 })()
 
-function logHTTPRequest (req, params) {
+function logHTTPRequest (req, params, time) {
   params = params || ''
-  log(util.format('[REQUEST] (%s) %s %s', req.ip, req.path, params))
+  if (!time && Array.isArray(params) && params.length === 2 && !isNaN(params[0]) && !isNaN(params[1])) {
+    time = params
+    params = ''
+  }
+  if (Array.isArray(time) && time.length === 2) {
+    time = util.format(' [%s.%ss]', time[0], time[1])
+  } else {
+    time = ''
+  }
+  log(util.format('[REQUEST] (%s) %s %s%s', req.ip, req.path, params, time))
 }
 
-function logHTTPError (req, message) {
+function logHTTPError (req, message, time) {
+  if (Array.isArray(time) && time.length === 2) {
+    time = util.format(' [%s.%ss]', time[0], time[1])
+  } else {
+    time = ''
+  }
   message = message || 'Parsing error'
-  log(util.format('[ERROR] (%s) %s: %s', req.ip, req.path, message))
+  log(util.format('[ERROR] (%s) %s: %s%s', req.ip, req.path, message, time))
 }
 
 /* This is a special magic function to make sure that when
@@ -156,35 +170,38 @@ if (Config.useCompression) {
 
 /* Return the underlying information about the daemon(s) we are polling */
 app.get('/info', (req, res) => {
+  const start = process.hrtime()
   database.getInfo().then((info) => {
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     info.isCacheApi = true
     return res.json(info)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 app.get('/getinfo', (req, res) => {
+  const start = process.hrtime()
   database.getInfo().then((info) => {
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     info.isCacheApi = true
     return res.json(info)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 /* Get information regarding the current cache height */
 app.get('/height', (req, res) => {
+  const start = process.hrtime()
   var networkData
   database.getInfo().then((info) => {
     networkData = info
     return database.getLastBlockHeader()
   }).then((header) => {
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     /* We shave one off the cached network_height as the underlying daemons
        misreport this information. The network_height indicates the block
        that the network is looking for, not the last block it found */
@@ -193,19 +210,20 @@ app.get('/height', (req, res) => {
       network_height: networkData.network_height - 1
     })
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 /* Get information regarding the current cache height */
 app.get('/getheight', (req, res) => {
+  const start = process.hrtime()
   var networkData
   database.getInfo().then((info) => {
     networkData = info
     return database.getLastBlockHeader()
   }).then((header) => {
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     /* We shave one off the cached network_height as the underlying daemons
        misreport this information. The network_height indicates the block
        that the network is looking for, not the last block it found */
@@ -214,19 +232,20 @@ app.get('/getheight', (req, res) => {
       network_height: networkData.network_height - 1
     })
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 /* Get the current circulating currency amount */
 app.get('/supply', (req, res) => {
+  const start = process.hrtime()
   database.getLastBlockHeader().then((header) => {
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     const supply = (header.alreadyGeneratedCoins / Math.pow(10, Config.coinDecimals)).toFixed(Config.coinDecimals).toString()
     return res.send(supply)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
@@ -234,22 +253,24 @@ app.get('/supply', (req, res) => {
 /* Returns the latest 2,880 (1 day) block statistics to help
    better understand the state of the network */
 app.get('/chain/stats', (req, res) => {
+  const start = process.hrtime()
   database.getRecentChainStats().then((blocks) => {
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     return res.json(blocks)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 /* Submit a new block to the network */
 app.post('/block', (req, res) => {
+  const start = process.hrtime()
   const blockBlob = req.body.block || false
 
   if (!blockBlob || !isHex(blockBlob)) {
     const message = 'Invalid block blob format'
-    logHTTPError(req, message)
+    logHTTPError(req, message, process.hrtime(start))
     return res.status(400).json({ message: message })
   }
 
@@ -274,11 +295,11 @@ app.post('/block', (req, res) => {
 
       if (response.error) {
         /* Log and spit back the response */
-        logHTTPError(req, JSON.stringify(req.body))
+        logHTTPError(req, JSON.stringify(req.body), process.hrtime(start))
         return res.status(400).json({ message: response.error })
       } else {
         /* Log and spit back the response */
-        logHTTPRequest(req, JSON.stringify(req.body))
+        logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
         return res.send(201).send()
       }
     } else {
@@ -301,7 +322,7 @@ app.post('/block', (req, res) => {
 
   /* Set up our cancel timer in case the message doesn't get handled */
   cancelTimer = setTimeout(() => {
-    logHTTPError(req, 'Could not complete request with relay agent')
+    logHTTPError(req, 'Could not complete request with relay agent', process.hrtime(start))
     return res.status(500).send()
   }, 5500)
 })
@@ -309,20 +330,21 @@ app.post('/block', (req, res) => {
 /* Get block information for the last 1,000 blocks before
    the specified block inclusive of the specified blocks */
 app.get('/block/headers/:search/bulk', (req, res) => {
+  const start = process.hrtime()
   const idx = toNumber(req.params.search) || -1
 
   /* If the caller did not specify a valid height then
      they most certainly didn't read the directions */
   if (idx === -1) {
-    logHTTPError(req)
+    logHTTPError(req, 'No valid height provided', process.hrtime(start))
     return res.status(400).send()
   }
 
   database.getBlocks(idx, 1000).then((blocks) => {
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     return res.json(blocks)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
@@ -330,66 +352,69 @@ app.get('/block/headers/:search/bulk', (req, res) => {
 /* Get block information for the last 30 blocks before
    the specified block inclusive of the specified block */
 app.get('/block/headers/:search', (req, res) => {
+  const start = process.hrtime()
   const idx = toNumber(req.params.search) || -1
 
   /* If the caller did not specify a valid height then
      they most certainly didn't read the directions */
   if (idx === -1) {
-    logHTTPError(req)
+    logHTTPError(req, 'No valid height provided', process.hrtime(start))
     return res.status(400).send()
   }
 
   database.getBlocks(idx).then((blocks) => {
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     return res.json(blocks)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 /* Get the last block header */
 app.get('/block/header/top', (req, res) => {
+  const start = process.hrtime()
   database.getLastBlockHeader().then((header) => {
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     return res.json(header)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 /* Get the block header for the specified block (by hash or height) */
 app.get('/block/header/:search', (req, res) => {
+  const start = process.hrtime()
   const idx = req.params.search
 
   /* If we suspect that we were passed a hash, let's go look for it */
   if (idx.length === 64) {
     /* But first, did they pass us only hexadecimal characters ? */
     if (!isHex(idx)) {
-      logHTTPError(req)
+      logHTTPError(req, 'Block hash is not in a valid format', process.hrtime(start))
       return res.status(400).send()
     }
 
     database.getBlockHeaderByHash(idx).then((header) => {
-      logHTTPRequest(req)
+      logHTTPRequest(req, process.hrtime(start))
       return res.json(header)
     }).catch((error) => {
-      logHTTPError(req, error)
+      logHTTPError(req, error, process.hrtime(start))
       return res.status(404).send()
     })
   } else {
     /* If they didn't pass us a number, we need to get out of here */
     if (toNumber(idx) === false) {
-      logHTTPError(req)
+      logHTTPError(req, 'Block height is not a number', process.hrtime(start))
       return res.status(400).send()
     }
 
     database.getBlockHeaderByHeight(idx).then((header) => {
-      logHTTPRequest(req)
+      logHTTPRequest(req, process.hrtime(start))
       return res.json(header)
     }).catch((error) => {
-      logHTTPError(req, error)
+      logHTTPError(req, error, process.hrtime(start))
       return res.status(404).send()
     })
   }
@@ -397,39 +422,42 @@ app.get('/block/header/:search', (req, res) => {
 
 /* Get the count of blocks in the backend database */
 app.get('/block/count', (req, res) => {
+  const start = process.hrtime()
   database.getBlockCount().then((count) => {
+    logHTTPRequest(req, process.hrtime(start))
     return res.json({
       blockCount: count
     })
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 /* Get a block template for mining */
 app.post('/block/template', (req, res) => {
+  const start = process.hrtime()
   const address = req.body.address || false
   const reserveSize = toNumber(req.body.reserveSize)
 
   /* If they didn't provide a reserve size then there's little we can do here */
   if (!reserveSize) {
     var error = 'Missing reserveSize value'
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(400).json({ message: error })
   }
 
   /* If the reserveSize is out of range, then throw an error */
   if (reserveSize < 0 || reserveSize > 255) {
     error = 'reserveSize out of range'
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(400).json({ message: error })
   }
 
   /* To get a block template, an address must be supplied */
   if (!address) {
     error = 'Missing address value'
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(400).json({ message: error })
   }
 
@@ -437,7 +465,7 @@ app.post('/block/template', (req, res) => {
     coinUtils.decodeAddress(address)
   } catch (e) {
     error = 'Invalid address supplied'
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(400).json({ message: error })
   }
 
@@ -462,11 +490,11 @@ app.post('/block/template', (req, res) => {
 
       if (response.error) {
         /* Log and spit back the response */
-        logHTTPError(req, JSON.stringify(req.body))
+        logHTTPError(req, JSON.stringify(req.body), process.hrtime(start))
         return res.status(400).json({ message: response.error })
       } else {
         /* Log and spit back the response */
-        logHTTPRequest(req, JSON.stringify(req.body))
+        logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
         return res.json({
           blocktemplate: response.blocktemplate_blob,
           difficulty: response.difficulty,
@@ -495,44 +523,45 @@ app.post('/block/template', (req, res) => {
 
   /* Set up our cancel timer in case the message doesn't get handled */
   cancelTimer = setTimeout(() => {
-    logHTTPError(req, 'Could not complete request with relay agent')
+    logHTTPError(req, 'Could not complete request with relay agent', process.hrtime(start))
     return res.status(500).send()
   }, 5500)
 })
 
 /* Get block information for the specified block (by hash or height) */
 app.get('/block/:search', (req, res) => {
+  const start = process.hrtime()
   const idx = req.params.search
 
   /* If we suspect that we were passed a hash, let's go look for it */
   if (idx.length === 64) {
     /* But first, did they pass us only hexadecimal characters ? */
     if (!isHex(idx)) {
-      logHTTPError(req)
+      logHTTPError(req, 'Block hash supplied is not in a valid format', process.hrtime(start))
       return res.status(400).send()
     }
 
     database.getBlock(idx).then((block) => {
-      logHTTPRequest(req)
+      logHTTPRequest(req, process.hrtime(start))
       return res.json(block)
     }).catch((error) => {
-      logHTTPError(req, error)
+      logHTTPError(req, error, process.hrtime(start))
       return res.status(404).send()
     })
   } else {
     /* If they didn't pass us a number, we need to get out of here */
     if (toNumber(idx) === false) {
-      logHTTPError(req)
+      logHTTPError(req, 'Block height supplied is not a valid number', process.hrtime(start))
       return res.status(400).send()
     }
 
     database.getBlockHeaderByHeight(idx).then((header) => {
       return database.getBlock(header.hash)
     }).then((block) => {
-      logHTTPRequest(req)
+      logHTTPRequest(req, process.hrtime(start))
       return res.json(block)
     }).catch((error) => {
-      logHTTPError(req, error)
+      logHTTPError(req, error, process.hrtime(start))
       return res.status(404).send()
     })
   }
@@ -540,117 +569,124 @@ app.get('/block/:search', (req, res) => {
 
 /* Get the current transaction pool */
 app.get('/transaction/pool', (req, res) => {
+  const start = process.hrtime()
   database.getTransactionPool().then((transactions) => {
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     return res.json(transactions)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 /* Get a transaction by its hash */
 app.get('/transaction/:search', (req, res) => {
+  const start = process.hrtime()
   const idx = req.params.search
 
   /* We need to check to make sure that they sent us 64 hexadecimal characters */
   if (!isHex(idx) || idx.length !== 64) {
-    logHTTPError(req)
+    logHTTPError(req, 'Transaction hash supplied is not in a valid format', process.hrtime(start))
     return res.status(400).send()
   }
 
   database.getTransaction(idx).then((transaction) => {
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     return res.json(transaction)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(404).send()
   })
 })
 
 /* Get transaction inputs by its hash */
 app.get('/transaction/:search/inputs', (req, res) => {
+  const start = process.hrtime()
   const idx = req.params.search
 
   /* We need to check to make sure that they sent us 64 hexadecimal characters */
   if (!isHex(idx) || idx.length !== 64) {
-    logHTTPError(req)
+    logHTTPError(req, 'Transaction hash supplied is not in a valid format', process.hrtime(start))
     return res.status(400).send()
   }
 
   database.getTransactionInputs(idx).then((inputs) => {
     if (inputs.length === 0) {
-      logHTTPRequest(req)
+      logHTTPRequest(req, process.hrtime(start))
       return res.status(404).send()
     }
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     return res.json(inputs)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 /* Get transaction outputs by its hash */
 app.get('/transaction/:search/outputs', (req, res) => {
+  const start = process.hrtime()
   const idx = req.params.search
 
   /* We need to check to make sure that they sent us 64 hexadecimal characters */
   if (!isHex(idx) || idx.length !== 64) {
-    logHTTPError(req)
+    logHTTPError(req, 'Transaction hash supplied is not in a valid format', process.hrtime(start))
     return res.status(400).send()
   }
 
   database.getTransactionOutputs(idx).then((outputs) => {
     if (outputs.length === 0) {
-      logHTTPRequest(req)
+      logHTTPRequest(req, process.hrtime(start))
       return res.status(404).send()
     }
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     return res.json(outputs)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 /* Get all transactions hashes that have the supplied payment ID */
 app.get('/transactions/:search', (req, res) => {
+  const start = process.hrtime()
   const idx = req.params.search
 
   /* We need to check to make sure that they sent us 64 hexadecimal characters */
   if (!isHex(idx) || idx.length !== 64) {
-    logHTTPError(req)
+    logHTTPError(req, 'Payment ID supplied is not in a valid format', process.hrtime(start))
     return res.status(400).send()
   }
 
   database.getTransactionHashesByPaymentId(idx).then((hashes) => {
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     return res.json(hashes)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 app.get('/amounts', (req, res) => {
+  const start = process.hrtime()
   database.getMixableAmounts(Config.defaultMixins).then((amounts) => {
-    logHTTPRequest(req)
+    logHTTPRequest(req, process.hrtime(start))
     return res.json(amounts)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(404).send()
   })
 })
 
 /* Get random outputs for transaction mixing */
 app.post('/randomOutputs', (req, res) => {
+  const start = process.hrtime()
   const amounts = req.body.amounts || []
   const mixin = toNumber(req.body.mixin) || Config.defaultMixins
 
   /* If it's not an array then we didn't follow the directions */
   if (!Array.isArray(amounts)) {
-    logHTTPError(req, JSON.stringify(req.body))
+    logHTTPError(req, JSON.stringify(req.body), process.hrtime(start))
     return res.status(400).send()
   }
 
@@ -659,7 +695,7 @@ app.post('/randomOutputs', (req, res) => {
   for (var i = 0; i < amounts.length; i++) {
     var amount = toNumber(amounts[i])
     if (!amount) {
-      logHTTPError(req, JSON.stringify(req.body))
+      logHTTPError(req, JSON.stringify(req.body), process.hrtime(start))
       return res.status(400).send()
     }
     amounts[i] = amount
@@ -667,10 +703,10 @@ app.post('/randomOutputs', (req, res) => {
 
   /* Go and try to get our random outputs */
   database.getRandomOutputsForAmounts(amounts, mixin).then((randomOutputs) => {
-    logHTTPRequest(req, JSON.stringify(req.body))
+    logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
     return res.json(randomOutputs)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
@@ -678,13 +714,14 @@ app.post('/randomOutputs', (req, res) => {
 /* Allow us to get just the information that a wallet needs to find
    the transactions that belong to the wallet */
 app.post('/sync', (req, res) => {
+  const start = process.hrtime()
   const lastKnownBlockHashes = req.body.lastKnownBlockHashes || []
   const blockCount = toNumber(req.body.blockCount) || 100
   const scanHeight = toNumber(req.body.scanHeight)
 
   /* If it's not an array then we didn't follow the directions */
   if (!Array.isArray(lastKnownBlockHashes) && !scanHeight) {
-    logHTTPError(req, JSON.stringify(req.body))
+    logHTTPError(req, JSON.stringify(req.body), process.hrtime(start))
     return res.status(400).send()
   }
 
@@ -704,23 +741,24 @@ app.post('/sync', (req, res) => {
      to search for, then we're going to stop right here and
      say something about it */
     if (searchHashes.length === 0) {
+      logHTTPError(req, 'No search hashes supplied', process.hrtime(start))
       return res.status(400).send()
     }
 
     database.getWalletSyncData(searchHashes, blockCount).then((outputs) => {
       req.body.lastKnownBlockHashes = req.body.lastKnownBlockHashes.length
-      logHTTPRequest(req, JSON.stringify(req.body))
+      logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
       return res.json(outputs)
     }).catch((error) => {
-      logHTTPError(req, error)
+      logHTTPError(req, error, process.hrtime(start))
       return res.status(404).send()
     })
   } else {
     database.getWalletSyncDataByHeight(scanHeight, blockCount).then((outputs) => {
-      logHTTPRequest(req, JSON.stringify(req.body))
+      logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
       return res.json(outputs)
     }).catch((error) => {
-      logHTTPError(req, error)
+      logHTTPError(req, error, process.hrtime(start))
       return res.status(404).send()
     })
   }
@@ -729,12 +767,13 @@ app.post('/sync', (req, res) => {
 /* Allows us to provide a method to send a raw transaction on the network
    endpoint that works with our blockchain relay agent workers */
 app.post('/transaction', (req, res) => {
+  const start = process.hrtime()
   const transaction = req.body.tx_as_hex || false
   var cancelTimer
 
   /* If there is no transaction or the data isn't hex... we're done here */
   if (!transaction || !isHex(transaction)) {
-    logHTTPError(req, 'Invalid or no transaction hex data supplied')
+    logHTTPError(req, 'Invalid or no transaction hex data supplied', process.hrtime(start))
     return res.status(400).send()
   }
 
@@ -756,7 +795,7 @@ app.post('/transaction', (req, res) => {
       }
 
       /* Log and spit back the response */
-      logHTTPRequest(req, JSON.stringify(req.body))
+      logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
       return res.json(response)
     } else {
       /* It wasn't for us, don't acknowledge the message */
@@ -779,7 +818,7 @@ app.post('/transaction', (req, res) => {
 
   /* Set up our cancel timer in case the message doesn't get handled */
   cancelTimer = setTimeout(() => {
-    logHTTPError(req, 'Could not complete request with relay agent')
+    logHTTPError(req, 'Could not complete request with relay agent', process.hrtime(start))
     return res.status(500).send()
   }, 5500)
 })
@@ -787,7 +826,8 @@ app.post('/transaction', (req, res) => {
 /* Legacy daemon API calls provided for limited support */
 
 app.get('/fee', (req, res) => {
-  logHTTPRequest(req)
+  const start = process.hrtime()
+  logHTTPRequest(req, process.hrtime(start))
   return res.json({
     address: Config.nodeFee.address,
     amount: Config.nodeFee.amount,
@@ -796,7 +836,8 @@ app.get('/fee', (req, res) => {
 })
 
 app.get('/feeinfo', (req, res) => {
-  logHTTPRequest(req)
+  const start = process.hrtime()
+  logHTTPRequest(req, process.hrtime(start))
   return res.json({
     address: Config.nodeFee.address,
     amount: Config.nodeFee.amount,
@@ -805,6 +846,7 @@ app.get('/feeinfo', (req, res) => {
 })
 
 app.post('/getwalletsyncdata/preflight', (req, res) => {
+  const start = process.hrtime()
   const startHeight = toNumber(req.body.startHeight)
   const startTimestamp = toNumber(req.body.startTimestamp)
   const blockHashCheckpoints = req.body.blockHashCheckpoints || []
@@ -812,26 +854,29 @@ app.post('/getwalletsyncdata/preflight', (req, res) => {
   blockHashCheckpoints.forEach((checkpoint) => {
     /* If any of the supplied block hashes aren't hexadecimal then we're done */
     if (!isHex(checkpoint)) {
+      logHTTPError(req, 'Block hash supplied is not in a valid format', process.hrtime(start))
       return res.status(400).send()
     }
   })
 
   /* We cannot supply both values */
   if (startHeight > 0 && startTimestamp > 0) {
+    logHTTPError(req, 'Cannot supply both startHeight and startTimestamp', process.hrtime(start))
     return res.status(400).send()
   }
 
   database.legacyGetWalletSyncDataPreflight(startHeight, startTimestamp, blockHashCheckpoints).then((syncData) => {
     req.body.blockHashCheckpoints = blockHashCheckpoints.length
-    logHTTPRequest(req, JSON.stringify(req.body))
+    logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
     return res.json({ height: syncData.height, blockCount: syncData.blockCount, status: 'OK' })
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 app.post('/getwalletsyncdata', (req, res) => {
+  const start = process.hrtime()
   const startHeight = toNumber(req.body.startHeight)
   const startTimestamp = toNumber(req.body.startTimestamp)
   const blockHashCheckpoints = req.body.blockHashCheckpoints || []
@@ -841,20 +886,22 @@ app.post('/getwalletsyncdata', (req, res) => {
   blockHashCheckpoints.forEach((checkpoint) => {
     /* If any of the supplied block hashes aren't hexadecimal then we're done */
     if (!isHex(checkpoint)) {
+      logHTTPError(req, 'Block hash supplied is not in a valid format', process.hrtime(start))
       return res.status(400).send()
     }
   })
 
   /* We cannot supply both values */
   if (startHeight > 0 && startTimestamp > 0) {
+    logHTTPError(req, 'Cannot supply both startHeight and startTimestamp', process.hrtime(start))
     return res.status(400).send()
   }
 
   database.legacyGetWalletSyncData(startHeight, startTimestamp, blockHashCheckpoints, blockCount, skipCoinbaseTransactions).then((results) => {
     req.body.blockHashCheckpoints = blockHashCheckpoints.length
-    logHTTPRequest(req, JSON.stringify(req.body))
 
     if (results.length !== 0) {
+      logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
       return res.json({
         items: results,
         status: 'OK',
@@ -862,6 +909,7 @@ app.post('/getwalletsyncdata', (req, res) => {
       })
     } else {
       database.getLastBlockHeader().then((block) => {
+        logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
         return res.json({
           items: results,
           status: 'OK',
@@ -874,51 +922,55 @@ app.post('/getwalletsyncdata', (req, res) => {
       })
     }
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 app.get('/getwalletsyncdata/:height/:count', (req, res) => {
+  const start = process.hrtime()
   const startHeight = toNumber(req.params.height)
   const blockCount = toNumber(req.params.count) || 100
 
   database.legacyGetWalletSyncDataLite(startHeight, blockCount).then((results) => {
-    logHTTPRequest(req, JSON.stringify(req.body))
+    logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
     return res.json({ items: results, status: 'OK' })
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 app.get('/getwalletsyncdata/:height', (req, res) => {
+  const start = process.hrtime()
   const startHeight = toNumber(req.params.height)
   const blockCount = toNumber(req.params.count) || 100
 
   database.legacyGetWalletSyncDataLite(startHeight, blockCount).then((results) => {
-    logHTTPRequest(req, JSON.stringify(req.body))
+    logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
     return res.json({ items: results, status: 'OK' })
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
 
 app.post('/get_transactions_status', (req, res) => {
+  const start = process.hrtime()
   const transactionHashes = req.body.transactionHashes || []
 
   transactionHashes.forEach((hash) => {
     if (!isHex(hash)) {
+      logHTTPError(req, 'Transaction has supplied is not in a valid format', process.hrtime(start))
       return res.status(400).send()
     }
   })
 
   database.getTransactionsStatus(transactionHashes).then((result) => {
-    logHTTPRequest(req, JSON.stringify(req.body))
+    logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
     return res.json(result)
   }).catch((error) => {
-    logHTTPError(req, error)
+    logHTTPError(req, error, process.hrtime(start))
     return res.status(500).send()
   })
 })
@@ -926,12 +978,13 @@ app.post('/get_transactions_status', (req, res) => {
 /* Allows us to provide a daemon like /sendrawtransaction
    endpoint that works with our blockchain relay agent workers */
 app.post('/sendrawtransaction', (req, res) => {
+  const start = process.hrtime()
   const transaction = req.body.tx_as_hex || false
   var cancelTimer
 
   /* If there is no transaction or the data isn't hex... we're done here */
   if (!transaction || !isHex(transaction)) {
-    logHTTPError(req, 'Invalid or no transaction hex data supplied')
+    logHTTPError(req, 'Invalid or no transaction hex data supplied', process.hrtime(start))
     return res.status(400).send()
   }
 
@@ -953,7 +1006,7 @@ app.post('/sendrawtransaction', (req, res) => {
       }
 
       /* Log and spit back the response */
-      logHTTPRequest(req, JSON.stringify(req.body))
+      logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
       return res.json(response)
     } else {
       /* It wasn't for us, don't acknowledge the message */
@@ -976,7 +1029,7 @@ app.post('/sendrawtransaction', (req, res) => {
 
   /* Set up our cancel timer in case the message doesn't get handled */
   cancelTimer = setTimeout(() => {
-    logHTTPError(req, 'Could not complete request with relay agent')
+    logHTTPError(req, 'Could not complete request with relay agent', process.hrtime(start))
     return res.status(500).send()
   }, 5500)
 })
