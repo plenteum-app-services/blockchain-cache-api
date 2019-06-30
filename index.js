@@ -66,16 +66,19 @@ function buildConnectionString (host, username, password) {
 
 var publicChannel
 var replyQueue
-(async function () {
+
+async function connectRabbit () {
   /* Set up our access to the necessary RabbitMQ systems */
   var publicRabbit = await RabbitMQ.connect(buildConnectionString(env.publicRabbit.host, env.publicRabbit.username, env.publicRabbit.password))
   publicChannel = await publicRabbit.createChannel()
 
   publicRabbit.on('error', (error) => {
     log(util.format('[ERROR] %s', error))
+    connectRabbit()
   })
   publicChannel.on('error', (error) => {
     log(util.format('[ERROR] %s', error))
+    connectRabbit()
   })
 
   /* Set up the RabbitMQ queues */
@@ -85,6 +88,10 @@ var replyQueue
 
   /* Create our worker's reply queue */
   replyQueue = await publicChannel.assertQueue('', { exclusive: true, durable: false })
+}
+
+(async function () {
+  await connectRabbit()
 })()
 
 function logHTTPRequest (req, params, time) {
