@@ -1022,7 +1022,7 @@ app.post('/sendrawtransaction', (req, res) => {
       }
 
       /* Log and spit back the response */
-      logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
+      logHTTPRequest(req, JSON.stringify(req.body) + '[' + response.status.yellow + ']', process.hrtime(start))
       return res.json(response)
     } else {
       /* It wasn't for us, don't acknowledge the message */
