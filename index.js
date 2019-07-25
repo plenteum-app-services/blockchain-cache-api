@@ -6,8 +6,9 @@
 
 require('dotenv').config()
 const BodyParser = require('body-parser')
-const Config = require('./config.json')
+const colors = require('colors')
 const Compression = require('compression')
+const Config = require('./config.json')
 const DatabaseBackend = require('./lib/databaseBackend.js')
 const Express = require('express')
 const Helmet = require('helmet')
@@ -116,7 +117,7 @@ function logHTTPError (req, message, time) {
     time = ''
   }
   message = message || 'Parsing error'
-  log(util.format('[ERROR] (%s) %s: %s%s', req.ip, req.path, message, time))
+  log(util.format('[ERROR] (%s) %s: %s%s', req.ip, req.path, message, time).red)
 }
 
 /* This is a special magic function to make sure that when
