@@ -1,14 +1,16 @@
-# TurtlePay™ Blockchain Cache API
+# Plenteum App Services Blockchain Cache API
 
 #### Master Build Status
-[![Build Status](https://travis-ci.org/TurtlePay/blockchain-cache-api.svg?branch=master)](https://travis-ci.org/TurtlePay/blockchain-cache-api) [![Build status](https://ci.appveyor.com/api/projects/status/github/TurtlePay/blockchain-cache-api?branch=master&svg=true)](https://ci.appveyor.com/project/brandonlehmann/blockchain-cache-api/branch/master)
+[![Build Status](https://travis-ci.com/plenteum-app-services/blockchain-cache-api.svg?branch=master)](https://travis-ci.com/plenteum-app-services/blockchain-cache-api) 
+[![Build status](https://ci.appveyor.com/api/projects/status/666lmjgikl7lkhs1?svg=true)](https://ci.appveyor.com/project/davehlong/blockchain-cache-api)
+
 
 ## Prerequisites
 
 * MariaDB/MySQL with InnoDB support
 * [RabbitMQ](https://www.rabbitmq.com/)
-* [TurtlePay: Blockchain Data Collection Agent](https://github.com/TurtlePay/blockchain-data-collection-agent)
-* [TurtlePay: Blockchain Relay Agent](https://github.com/TurtlePay/blockchain-relay-agent)
+* [Plenteum App Services: Blockchain Data Collection Agent](https://github.com/plenteum-app-services/blockchain-data-collection-agent)
+* [Plenteum App Services: Blockchain Relay Agent](https://github.com/plenteum-app-services/blockchain-relay-agent)
 * [Node.js](https://nodejs.org/) LTS
 
 ## Foreword
@@ -20,7 +22,7 @@ We know that this documentation needs cleaned up and made easier to read. We'll 
 1) Clone this repository to wherever you'd like the API to run:
 
 ```bash
-git clone https://github.com/TurtlePay/blockchain-cache-api
+git clone https://github.com/plenteum-app-services/blockchain-cache-api
 ```
 
 2) Install the required Node.js modules
@@ -66,6 +68,7 @@ pm2 save
 
 ## API
 
-See https://docs.turtlepay.io/blockapi/ for the full REST API provided by this package.
+See https://www.plenteum.com/docs/blockchain-cache-api/ for the full REST API provided by this package.
 
 ###### (c) 2018 TurtlePay™ Development Team
+###### (c) 2019 Plenteum Development Team

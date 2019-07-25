@@ -12,7 +12,7 @@ const Express = require('express')
 const Helmet = require('helmet')
 const isHex = require('is-hex')
 const RabbitMQ = require('amqplib')
-const TurtleCoinUtils = require('turtlecoin-utils').CryptoNote
+const PlenteumUtils = require('plenteum-utils').CryptoNote
 const util = require('util')
 const UUID = require('uuid/v4')
 
@@ -46,8 +46,8 @@ if (!env.mysql.host || !env.mysql.port || !env.mysql.username || !env.mysql.pass
   process.exit(1)
 }
 
-/* Create an instance of the TurtleCoin Utils */
-const coinUtils = new TurtleCoinUtils()
+/* Create an instance of the Plenteum Utils */
+const coinUtils = new PlenteumUtils()
 
 /* Helps us to build the RabbitMQ connection string */
 function buildConnectionString (host, username, password) {
