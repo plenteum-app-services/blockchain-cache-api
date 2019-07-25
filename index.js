@@ -4,6 +4,7 @@
 
 'use strict'
 
+require('dotenv').config()
 const BodyParser = require('body-parser')
 const Config = require('./config.json')
 const Compression = require('compression')
