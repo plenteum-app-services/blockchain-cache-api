@@ -6,8 +6,9 @@
 
 require('dotenv').config()
 const BodyParser = require('body-parser')
-const Config = require('./config.json')
+require('colors')
 const Compression = require('compression')
+const Config = require('./config.json')
 const DatabaseBackend = require('./lib/databaseBackend.js')
 const Express = require('express')
 const Helmet = require('helmet')
@@ -116,7 +117,7 @@ function logHTTPError (req, message, time) {
     time = ''
   }
   message = message || 'Parsing error'
-  log(util.format('[ERROR] (%s) %s: %s%s', req.ip, req.path, message, time))
+  log(util.format('[ERROR] (%s) %s: %s%s', req.ip, req.path, message, time).red)
 }
 
 /* This is a special magic function to make sure that when
@@ -1021,7 +1022,7 @@ app.post('/sendrawtransaction', (req, res) => {
       }
 
       /* Log and spit back the response */
-      logHTTPRequest(req, JSON.stringify(req.body), process.hrtime(start))
+      logHTTPRequest(req, JSON.stringify(req.body) + '[' + response.status.yellow + ']', process.hrtime(start))
       return res.json(response)
     } else {
       /* It wasn't for us, don't acknowledge the message */
